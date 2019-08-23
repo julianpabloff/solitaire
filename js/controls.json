@@ -1,0 +1,12 @@
+{
+	"flip": "space",
+	"pileOne": "1",
+	"pileTwo": "2",
+	"pileThree": "3",
+	"pileFour": "4",
+	"pileFive": "5",
+	"pileSix": "6",
+	"pileSeven": "7",
+	"selectWaste": "q",
+	"escape": "escape"
+}
