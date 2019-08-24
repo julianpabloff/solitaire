@@ -68,6 +68,9 @@ const Game = function() {
 	}
 
 	const validPair = function(card, target) {
+		if (target == undefined)
+			if (card.value == 13) return true;
+			else return false;
 		let cardSuitIndex = suits.indexOf(card.suit);
 		let targetSuitIndex = suits.indexOf(target.suit);
 		if (cardSuitIndex % 2 != targetSuitIndex % 2)
@@ -75,8 +78,54 @@ const Game = function() {
 		return false;
 	}
 
+	this.pileData = function() {
+		let output = [];
+		for (let pile of this.piles) {
+			let count = 0;
+			for (let card of pile) {
+				if (card.faceUp) count++;
+			}
+			output.push(count);
+		}
+		return output;
+	}
+
 	this.moveCards = function(command) {
-		let pile = command[0]; let target = command[1];
+		let first = command[0]; let second = command[1];
+		if (first.type == 'pile') {
+			if (second.type == 'pile') {
+				this.pileToPile(first, second);
+			}
+		}
+	}
+
+	this.pileToPile = function(first, second) {
+		let firstPile = this.piles[first.index];
+		let secondPile = this.piles[second.index];
+
+		let c, depth;
+		for (c = 0; c < firstPile.length; c++) {
+			if (firstPile[c].faceUp) break;
+		}
+
+		depth = c + first.depth;
+		let count = firstPile.length - depth;
+
+		let firstCard = firstPile[depth];
+		let secondCard = secondPile[secondPile.length - 1];
+
+		if (validPair(firstCard, secondCard)) {
+			this.piles[second.index] = secondPile.concat(firstPile.splice(depth, count));
+			let firstPileLength = this.piles[first.index].length;
+			if (firstPileLength > 0)
+				this.piles[first.index][firstPileLength - 1].faceUp = true;
+		}
+	}
+
+	this.pileToPileOld = function(first, second) {
+		let pile = first.index;
+		let target = second.index;
+		let depth = first.depth;
 		let targetCard = this.piles[target][this.piles[target].length - 1];
 		let checking = true;
 		let faceUpCount = 0;
@@ -95,6 +144,10 @@ const Game = function() {
 			this.piles[pile].pop();
 		if (this.piles[pile].length > 0)
 			this.piles[pile][this.piles[pile].length-1].faceUp = true;
+	}
+
+	this.submitCard = function(command) {
+		let bleh = 'hehe';
 	}
 }
 

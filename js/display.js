@@ -180,6 +180,17 @@ const Display = function() {
 			}
 		}
 	}
+	this.debugController = function(controller) {
+		setFg('white');
+		setBg('black');
+		for (let i = 0; i < 15; i++) {
+			stdout.cursorTo(0, i);
+			stdout.write('                    ');
+		}
+		stdout.cursorTo(0,0);
+		console.log(controller.buffer);
+		console.log(controller.action);
+	}
 
 }
 

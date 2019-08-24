@@ -1,5 +1,6 @@
 {
 	"flip": "space",
+	"waste" : "w",
 	"pileOne": "1",
 	"pileTwo": "2",
 	"pileThree": "3",
@@ -7,6 +8,10 @@
 	"pileFive": "5",
 	"pileSix": "6",
 	"pileSeven": "7",
-	"selectWaste": "q",
+	"selectUp": "up",
+	"selectDown": "down",
+	"selectLeft": "left",
+	"selectRight": "right",
+	"submit" : "return",
 	"escape": "escape"
 }

@@ -10,8 +10,8 @@ display.drawGameBoard(game);
 const update = function() {
 	if (controller.flip) game.flipDeck();
 	if (controller.quit) { display.exit(); process.exit(); }
-	if (controller.move.execute) {
-		game.moveCards(controller.move.command);
+	if (controller.action.execute) {
+		game.moveCards(controller.action.command);
 	}
 }
 
@@ -22,7 +22,9 @@ process.stdin.setRawMode(true);
 process.stdin.on("keypress", function(ch, k) {
 	let key = (k == undefined) ? ch : k;
 	controller.update(key.name);
+	controller.pileData = game.pileData();
 	update();
 	display.init();
 	display.drawGameBoard(game);
+	display.debugController(controller);
 });
