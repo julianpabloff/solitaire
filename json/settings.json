@@ -1,0 +1,22 @@
+{
+	"controls" : {
+		"flip": "space",
+		"waste" : "w",
+		"pileOne": "1",
+		"pileTwo": "2",
+		"pileThree": "3",
+		"pileFour": "4",
+		"pileFive": "5",
+		"pileSix": "6",
+		"pileSeven": "7",
+		"selectUp": "k",
+		"selectDown": "j",
+		"selectLeft": "h",
+		"selectRight": "l",
+		"to": "t",
+		"submit" : "return",
+		"cancel": "escape",
+		"undo": "u",
+		"quit": "q"
+	}
+}
