@@ -113,7 +113,7 @@ const Display = function() {
 			stdout.write(logo[i]);
 		}
 
-		let optionsY = Math.floor(rows * 0.5);
+		let optionsY = y + logo.length + 4;
 		let boxWidth = 16;
 		let boxX = Math.floor(columns/2) - Math.floor(boxWidth/2);
 		setBg('black'); setFg('white');
