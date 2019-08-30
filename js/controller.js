@@ -1,84 +1,14 @@
 let settings = require("../json/settings.json");
 let controls = settings.controls;
+let suits = ['h', 'c', 'd', 's'];
 
 const Controller = function() {
 
-	this.buffer = [{type: 'pile', index: 3, depth: 0, fullDepth: 4}];
+	this.buffer = [{type: 'pile', index: 3, depth: 0, fullDepth: 3}];
+	this.menuOption = 0;
 	this.action = {execute: false, command: []};
 	this.toMode = false;
 	// this.pileData and this.gameData from main file
-
-	this.handleBuffer = function() {
-		let first = this.buffer[0];
-		let second = this.buffer[1];
-
-		let last = this.buffer[this.buffer.length - 1];
-		if (this.jumpTo != null && last.type == 'pile')
-			last.index = this.jumpTo;
-
-		if (this.buffer.length == 2) {
-			if (this.toMode && this.submit)
-				this.toMode = false;
-
-			if (this.toMode) {
-
-				if (this.left) second.index = this.cycleLeft(second.index, false);
-				if (this.right) second.index = this.cycleRight(second.index, false);
-
-				if (this.up && first.depth > 0)
-					first.depth--;
-				if (this.down && first.depth + 1 < this.pileData[first.index])
-					first.depth++;
-				first.fullDepth = this.fullDepth(first.index, first.depth);
-
-				if (this.cancel || this.to) { // getting out of to mode
-					if (this.pileData[second.index] != 0)
-						this.buffer[0].index = second.index;
-					this.buffer.pop();
-					this.toMode = false;
-				}
-
-			} else {
-				this.action = {
-					execute: true,
-					command: [this.buffer[0], this.buffer[1]],
-				}
-				return;
-			}
-
-		} else if (this.buffer.length == 1) {
-			
-			if (this.to) {
-				this.toMode = true;
-				this.buffer.push({type: 'pile', index: first.index, depth: 0, fullDepth: this.fullDepth(first.index)});
-				first.fullDepth = this.fullDepth(first.index, first.depth);
-			}
-
-			if (this.left && first.type == 'pile') {
-				first.index = this.cycleLeft(first.index, true);
-				first.depth = 0;
-			}
-			if (this.right && first.type == 'pile') {
-				first.index = this.cycleRight(first.index, true);
-				first.depth = 0;
-			}
-
-			if (this.up && this.gameData.waste.length > 0)
-				first.type = 'waste';
-			if (this.down)
-				first.type = 'pile';
-
-			if (this.submit) {
-				this.buffer.push({type: 'submit', index: 'f', depth: null});
-				this.handleBuffer();
-				return;
-			}
-
-		} else {
-		}
-		this.action = {execute: false, command: []};
-
-	}
 
 	this.update = function(key) {
 		this.flip = this.submit = this.waste = this.quit = false;
@@ -110,10 +40,100 @@ const Controller = function() {
 			case controls.undo : this.undo = true; break;
 			case controls.quit : this.quit = true; break;
 		}
-
-		this.handleBuffer();
 	}
 	this.update();
+
+	this.handleMenu = function() {
+		if (this.up) {
+			if (this.menuOption == 0) this.menuOption = 3;
+			else this.menuOption--;
+		}
+		if (this.down) {
+			if (this.menuOption == 3) this.menuOption = 0;
+			else this.menuOption++;
+		}
+	}
+
+	this.handleBuffer = function() {
+		let first = this.buffer[0];
+		let second = this.buffer[1];
+
+		let last = this.buffer[this.buffer.length - 1];
+		if (this.jumpTo != null && last.type == 'pile')
+			last.index = this.jumpTo;
+
+		if (this.buffer.length == 2) {
+			if (this.toMode && this.submit)
+				this.toMode = false;
+
+			if (this.toMode) {
+
+				if (this.left) second.index = this.cycleLeft(second.index, false);
+				if (this.right) second.index = this.cycleRight(second.index, false);
+				if (this.left || this.right)
+					second.fullDepth = this.gameData.piles[second.index].length - 1;
+
+				if (this.up && first.depth > 0)
+					first.depth--;
+				if (this.down && first.depth + 1 < this.pileData[first.index])
+					first.depth++;
+				first.fullDepth = this.fullDepth(first.index, first.depth);
+
+				if (/*this.cancel || */this.to) { // getting out of to mode
+					if (this.pileData[second.index] != 0)
+						this.buffer[0].index = second.index;
+					this.buffer.pop();
+					this.toMode = false;
+				}
+
+			} else {
+				this.action = {
+					execute: true,
+					command: [this.buffer[0], this.buffer[1]],
+				}
+				return;
+			}
+
+		} else if (this.buffer.length == 1) {
+			
+			if (this.to) {
+				this.toMode = true;
+				this.buffer.push({type: 'pile', index: first.index, depth: 0, fullDepth: this.fullDepth(first.index, 0)});
+				first.fullDepth = this.fullDepth(first.index, first.depth);
+			}
+
+			if (this.left && first.type == 'pile') {
+				first.index = this.cycleLeft(first.index, true);
+				first.depth = 0;
+			}
+			if (this.right && first.type == 'pile') {
+				first.index = this.cycleRight(first.index, true);
+				first.depth = 0;
+			}
+			if (this.right && first.type == 'waste') {
+				first.type = 'foundation';
+				first.index = 0;
+			}
+			if (this.left || this.right)
+				first.fullDepth = this.fullDepth(first.index, first.depth);
+
+			if (this.up && this.gameData.waste.length > 0)
+				first.type = 'waste';
+			if (this.down)
+				first.type = 'pile';
+
+			if (this.submit) {
+				let suitIndex = suits.indexOf(this.gameData.piles[first.index][this.gameData.piles[first.index].length - 1].suit);
+				this.buffer.push({type: 'foundation', index: suitIndex, depth: null});
+				this.handleBuffer();
+				return;
+			}
+
+		} else {
+		}
+		this.action = {execute: false, command: []};
+
+	}
 
 	this.cycleLeft = function(index, skip) {
 		let newIndex;

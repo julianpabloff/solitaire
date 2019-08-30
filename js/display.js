@@ -16,6 +16,7 @@ const Display = function() {
 
 		cardX = Math.floor((columns - (cardWidth + margin) * 7 + margin) / 2);
 		cardY = Math.floor((rows - cardHeight) / 2);
+		//cardY = 40;
 		topY = cardY - cardHeight - margin;
 
 		wastePos = {x: cardX + cardWidth + margin, y: topY};
@@ -68,6 +69,73 @@ const Display = function() {
 		's' : ['   /\\   ', '  /  \\  ', ' /    \\ ', ' \\_/\\_/ ', '   /\\   '],
 		'j' : ['  ____  ', ' /\\  _\\ ', '/ 0  0 \\', '\\ \\__/ /', ' \\____/ '],
 	}
+	const logo = [
+		'                                                                                                 ',
+		'  █████████  █████████  ██        ████████  ████████  █████████  ████████  █████████  █████████  ',
+		'  ██         ██     ██  ██           ██        ██     ██     ██     ██     ██     ██  ██         ',
+		'  █████████  ██     ██  ██           ██        ██     █████████     ██     █████████  ████████   ',
+		'         ██  ██     ██  ██           ██        ██     ██     ██     ██     ██    ██   ██         ',
+		'  █████████  █████████  ████████  ████████     ██     ██     ██  ████████  ██     ██  █████████  ',
+		'                                                                                                 ',
+	];
+	const options = ['  NEW GAME  ', '  CONTINUE  ', '  SETTINGS  ', '    QUIT    '];
+
+	const centerString = function(string) { return Math.floor(columns/2) - Math.floor(string.length/2) }
+
+	this.drawSquare = function(x, y, width, height) {
+		stdout.cursorTo(x, y);
+		stdout.write('┌');
+		for (let i = 0; i < width - 2; i++) {
+			stdout.write('─');
+		}
+		stdout.write('┐');
+		for (let i = 0; i < height - 2; i++) {
+			stdout.cursorTo(x, y + 1 + i);
+			stdout.write('│');
+			stdout.cursorTo(x + width - 1, y + 1 + i);
+			stdout.write('│');
+		}
+		stdout.cursorTo(x, y + height - 1);
+		stdout.write('└');
+		for (let i = 0; i < width - 2; i++) {
+			stdout.write('─');
+		}
+		stdout.write('┘');
+	}
+
+	this.drawMainMenu = function(selectedIndex) {
+		let x = centerString(logo[0]);
+		let y = Math.floor(rows * 0.35);
+		setFg('white'); setBg('black');
+		this.drawSquare(x-1, y-1, logo[0].length + 2, logo.length + 2);
+		for (let i = 0; i < logo.length; i++) {
+			stdout.cursorTo(x, y + i);
+			stdout.write(logo[i]);
+		}
+
+		let optionsY = Math.floor(rows * 0.5);
+		let boxWidth = 16;
+		let boxX = Math.floor(columns/2) - Math.floor(boxWidth/2);
+		setBg('black'); setFg('white');
+		for (let i = 0; i < options.length + 5; i++) {
+			stdout.cursorTo(boxX, optionsY - 1 + i);
+			for (let j = 0; j < boxWidth; j++) {
+				stdout.write(' ');
+			}
+		}
+		this.drawSquare(boxX, optionsY - 1, boxWidth, options.length + 5);
+		for (let i = 0; i < options.length; i++) {
+			stdout.cursorTo(centerString(options[i]), optionsY + 2 * i);
+			if (i == selectedIndex) {
+				setFg('black');
+				setBg('white');
+			} else {
+				setFg('white');
+				setBg('black');
+			}
+			stdout.write(options[i]);
+		}
+	}
 
 	this.drawCardBox = function(x, y) {
 		for (let i = 0; i < 10; i++) {
@@ -104,9 +172,6 @@ const Display = function() {
 		stdout.write('  ');
 		stdout.cursorTo(x + 12 - value.length, y + 8);
 		stdout.write(value);
-		stdout.cursorTo(0,0);
-
-		stdout.write(colors.reset);
 	}
 
 	this.drawCardBack = function(x, y) {
@@ -152,16 +217,24 @@ const Display = function() {
 			}
 		}
 
-		stdout.write(colors.bg.green);
-		stdout.write(foundations.length.toString());
 		this.updateDeck(stock, waste);
 		this.updateFoundations(foundations);
 	}
 
+	this.clearGameBoard = function() {
+		setBg('green');
+		for (let i = topY; i < rows; i++) {
+			stdout.cursorTo(0, i);
+			for (let j = 0; j < columns; j++) {
+				stdout.write(' ');
+			}
+		}
+	}
+
 	this.wasteLength = 0;
 	this.updateDeck = function(stock, waste) {
+		if (stock.length == 0) this.drawFoundationSpot(cardX, topY);
 		if (stock.length > 0) this.drawCardBack(cardX, topY);
-		else this.drawFoundationSpot(cardX, topY);
 
 		let cardSet = [];
 		if (waste.length == 0) {
@@ -332,9 +405,9 @@ const Display = function() {
 		if (cardAction.valid) stdout.write(colors.fg.green + 'VALID');
 		else stdout.write(colors.fg.red + 'INVALID');
 	}
-	this.debugController = function(controller) {
+	this.debugController = function(game, controller, history) {
 		stdout.write(colors.reset);
-		for (let i = 0; i < 11; i++) {
+		for (let i = 0; i < 23; i++) {
 			for (let j = 0; j < columns; j++) {
 				stdout.cursorTo(j, i);
 				stdout.write(' ');
@@ -348,6 +421,13 @@ const Display = function() {
 		stdout.cursorTo(30, 1); console.log('lastIndex: ' + controller.lastIndex);
 		stdout.cursorTo(60, 1); console.log('pileData:');
 		stdout.cursorTo(60, 2); console.log(controller.pileData);
+		stdout.cursorTo(1, 10); console.log('HISTORY LENGTH: ' + history.length);
+		if (history.length > 0) {
+			stdout.cursorTo(1,12); console.log('NEXT REVERSE COMMAND:');
+			stdout.cursorTo(3, 13);
+			let command = history[history.length-1];
+			console.log(command);
+		}
 	}
 
 }
