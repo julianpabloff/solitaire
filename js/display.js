@@ -15,8 +15,8 @@ const Display = function() {
 		columns = stdout.columns;
 
 		cardX = Math.floor((columns - (cardWidth + margin) * 7 + margin) / 2);
-		cardY = Math.floor((rows - cardHeight) / 2);
-		//cardY = 40;
+		//cardY = Math.floor((rows - cardHeight) / 2);
+		cardY = 40;
 		topY = cardY - cardHeight - margin;
 
 		wastePos = {x: cardX + cardWidth + margin, y: topY};
@@ -49,6 +49,9 @@ const Display = function() {
 		stdout.write(colors.bg[colorName]);
 		background = colors.bg[colorName];
 	}
+	const setColor = function(fg, bg) {
+		setFg(fg); setBg(bg);
+	}
 
 	const greenBackground = function() {
 		stdout.write(colors.bg.green);
@@ -60,6 +63,8 @@ const Display = function() {
 		stdout.write(colors.fg.black);
 	}
 
+	const suits = ['h', 'c', 'd', 's'];
+	const values = [1,2,3,4,5,6,7,8,9,10,11,12,13];
 	const cardBox = ['┌────────────┐', '│            │', '└────────────┘'];
 	const cardVals = [null,'A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 	const cardSuits = {
@@ -69,6 +74,7 @@ const Display = function() {
 		's' : ['   /\\   ', '  /  \\  ', ' /    \\ ', ' \\_/\\_/ ', '   /\\   '],
 		'j' : ['  ____  ', ' /\\  _\\ ', '/ 0  0 \\', '\\ \\__/ /', ' \\____/ '],
 	}
+	const cardSuitChars = {'h': '♥', 'c': '♣', 'd': '♦', 's': '♠'};
 	const logo = [
 		'                                                                                                 ',
 		'  █████████  █████████  ██        ████████  ████████  █████████  ████████  █████████  █████████  ',
@@ -78,22 +84,35 @@ const Display = function() {
 		'  █████████  █████████  ████████  ████████     ██     ██     ██  ████████  ██     ██  █████████  ',
 		'                                                                                                 ',
 	];
+	const logoTwo = [
+		'                                                                                                 ',
+		'0011111111100111111111001100000000111111110011111111001111111110011111111001111111110011111111100',
+		'0011000000000110000011001100000000000110000000011000001100000110000011000001100000110011000000000',
+		'0011111111100110000011001100000000000110000000011000001111111110000011000001111111110011111111000',
+		'0000000001100110000011001100000000000110000000011000001100000110000011000001100001100011000000000',
+		'0011111111100111111111001111111100111111110000011000001100000110011111111001100000110011111111100',
+		'                                                                                                 ',
+	];
 	const options = ['  NEW GAME  ', '  CONTINUE  ', '  SETTINGS  ', '    QUIT    '];
 
 	const centerString = function(string) { return Math.floor(columns/2) - Math.floor(string.length/2) }
 
-	this.drawSquare = function(x, y, width, height) {
+	this.drawSquare = function(x, y, width, height, fill) {
 		stdout.cursorTo(x, y);
 		stdout.write('┌');
 		for (let i = 0; i < width - 2; i++) {
 			stdout.write('─');
 		}
 		stdout.write('┐');
-		for (let i = 0; i < height - 2; i++) {
-			stdout.cursorTo(x, y + 1 + i);
-			stdout.write('│');
-			stdout.cursorTo(x + width - 1, y + 1 + i);
-			stdout.write('│');
+		} else {
+			for (let i = 0; i < height - 2; i++) {
+				stdout.cursorTo(x, y + 1 + i);
+				stdout.write('│');
+				if (fill) for (let j = 0; j < width - 2; j++)
+					stdout.write(' ');
+				stdout.cursorTo(x + width - 1, y + 1 + i);
+				stdout.write('│');
+			}
 		}
 		stdout.cursorTo(x, y + height - 1);
 		stdout.write('└');
@@ -107,12 +126,11 @@ const Display = function() {
 		let x = centerString(logo[0]);
 		let y = Math.floor(rows * 0.35);
 		setFg('white'); setBg('black');
-		this.drawSquare(x-1, y-1, logo[0].length + 2, logo.length + 2);
+		this.drawSquare(x-1, y-1, logo[0].length + 2, logo.length + 2, false);
 		for (let i = 0; i < logo.length; i++) {
 			stdout.cursorTo(x, y + i);
 			stdout.write(logo[i]);
 		}
-
 		let optionsY = y + logo.length + 4;
 		let boxWidth = 16;
 		let boxX = Math.floor(columns/2) - Math.floor(boxWidth/2);
@@ -123,18 +141,27 @@ const Display = function() {
 				stdout.write(' ');
 			}
 		}
-		this.drawSquare(boxX, optionsY - 1, boxWidth, options.length + 5);
+		this.drawSquare(boxX, optionsY - 1, boxWidth, options.length + 5, false);
 		for (let i = 0; i < options.length; i++) {
 			stdout.cursorTo(centerString(options[i]), optionsY + 2 * i);
 			if (i == selectedIndex) {
-				setFg('black');
-				setBg('white');
+				setColor('black', 'white');
 			} else {
-				setFg('white');
-				setBg('black');
+				setColor('white', 'black');
 			}
 			stdout.write(options[i]);
 		}
+	}
+
+	this.animateCards = function() {
+		setInterval(() => {
+			let x = Math.floor(Math.random() * columns);
+			let y = Math.floor(Math.random() * rows);
+			let suit = suits[Math.floor(Math.random() * suits.length)];
+			let value = Math.floor(Math.random() * 13) + 1;
+			let card = {suit: suit, value: value};
+			this.drawCard(card, x, y);
+		}, 1000);
 	}
 
 	this.drawCardBox = function(x, y) {
@@ -155,9 +182,9 @@ const Display = function() {
 		let suit = card.suit;
 		let value = cardVals[card.value];
 
-		stdout.write(colors.fg.white);
-		if (suit == 'h' || suit == 'd') stdout.write(colors.bg.red);
-		else stdout.write(colors.bg.black);
+		setFg('white');
+		if (suit == 'h' || suit == 'd') setBg('red');
+		else setBg('black');
 		this.drawCardBox(x, y);
 		for (let i = 0; i <= 4; i++) {
 			stdout.cursorTo(x + 3, y + 2 + i);
@@ -165,20 +192,15 @@ const Display = function() {
 		}
 		// Stamps the values on the corners
 		stdout.cursorTo(x + 2, y + 1);
-		stdout.write('  ');
-		stdout.cursorTo(x + 2, y + 1);
-		stdout.write(value.toString());
-		stdout.cursorTo(x + 7, y + 8);
-		stdout.write('  ');
-		stdout.cursorTo(x + 12 - value.length, y + 8);
-		stdout.write(value);
+		stdout.write(value.toString() + ' '); //+ cardSuitChars[suit] + ' ');
+		stdout.cursorTo(x + 11 - value.length, y + 8);
+		stdout.write(' ' + value);
 	}
 
 	this.drawCardBack = function(x, y) {
-		stdout.write(colors.bg.white);
-		stdout.write(colors.fg.black);
-		this.drawCardBox(x,y, false);
-		for (let i = 1; i < 9; i+=2) {
+		setColor('black', 'white');
+		this.drawCardBox(x, y);
+		for (let i = 1; i < 9; i += 2) {
 			stdout.cursorTo(x + 1, y+i);
 			stdout.write('· · · · · · ');
 			stdout.cursorTo(x + 1, y+i+1);
@@ -187,13 +209,12 @@ const Display = function() {
 	}
 
 	this.drawFoundationSpot = function(x, y) {
-		stdout.write(colors.fg.black);
-		stdout.write(colors.bg.green);
+		setColor('black', 'green');
 		for (let i = 0; i < 10; i++) {
 			stdout.cursorTo(x, y + i);
 			stdout.write('░░░░░░░░░░░░░░');
 		}
-		stdout.write(colors.reset);
+		//stdout.write(colors.reset);
 	}
 
 	this.clearCard = function(x, y) {
@@ -223,12 +244,18 @@ const Display = function() {
 
 	this.clearGameBoard = function() {
 		setBg('green');
-		for (let i = topY; i < rows; i++) {
+		for (let i = topY - 2; i < rows; i++) {
 			stdout.cursorTo(0, i);
 			for (let j = 0; j < columns; j++) {
 				stdout.write(' ');
 			}
 		}
+	}
+
+	this.pauseMenu = function() {
+		let x = cardX + (cardWidth + margin) * 2 + 8;
+		let y = cardY - 3;
+		stdout.write(colors.reset);
 	}
 
 	this.wasteLength = 0;
@@ -299,7 +326,7 @@ const Display = function() {
 		setBg('green'); setFg('black');
 		for (let i = 0; i < 7; i++) {
 			stdout.cursorTo(cardX + i * (cardWidth + margin), cardY - 2);
-			//stdout.write(pileName(i));
+			stdout.write(pileName(i)); // Enable to write the piles that the cursor isn't on
 			stdout.write('              ');
 		}
 		stdout.cursorTo(cardX + cardWidth + margin, topY - 2);
@@ -421,6 +448,7 @@ const Display = function() {
 		stdout.cursorTo(30, 1); console.log('lastIndex: ' + controller.lastIndex);
 		stdout.cursorTo(60, 1); console.log('pileData:');
 		stdout.cursorTo(60, 2); console.log(controller.pileData);
+		stdout.cursorTo(80, 1); console.log('pause:' + controller.pause);
 		stdout.cursorTo(1, 10); console.log('HISTORY LENGTH: ' + history.length);
 		if (history.length > 0) {
 			stdout.cursorTo(1,12); console.log('NEXT REVERSE COMMAND:');

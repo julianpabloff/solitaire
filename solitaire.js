@@ -3,22 +3,8 @@ const display = new (require('./js/display.js'));
 const controller = new (require('./js/controller.js'));
 const fs = require('fs');
 
-//// MOVEMENT TYPES ////
-// pile to pile CHECK
 
-// pile to foundation
-// foundation to pile *
-
-// waste to pile CHECK
-// pile to waste *
-
-// waste to foundation
-// foundation to waste *
-
-game.buildDeck();
-display.init();
-display.drawMainMenu(controller.menuOption);
-
+///// MAIN MENU /////
 
 function updateMenu() {
 	controller.handleMenu();
@@ -33,10 +19,14 @@ function updateMenu() {
 	}
 }
 
+
+///// GAME SCREEN /////
+
 let history = [];
 let lastBuffer;
 
 function updateGame() {
+	let intitalBuffer = controller.buffer;
 	controller.handleBuffer();
 
 	if (controller.flip && !controller.toMode) {
@@ -47,8 +37,14 @@ function updateGame() {
 		history.push(command);
 	}
 
-	if (controller.quit) { display.exit(); process.exit(); }
-	if (controller.cancel) {
+	if (controller.pause) {
+		display.pauseMenu();
+		return;
+	}
+
+	//if (controller.quit) { display.exit(); process.exit(); }
+	if (controller.quit) {
+		controller.toMode = false;
 		switchTo('menu');
 		return;
 	}
@@ -66,8 +62,21 @@ function updateGame() {
 		history.pop();
 	}*/
 
+	// Pop the cursor back down when the waste is empty
 	if (game.waste.length == 0)
 		controller.buffer[0].type = 'pile';
+
+	//// MOVEMENT TYPES ////
+	// pile to pile CHECK
+
+	// pile to foundation
+	// foundation to pile *
+
+	// waste to pile CHECK
+	// pile to waste *
+
+	// waste to foundation
+	// foundation to waste *
 
 	if (controller.action.execute) {
 		let command = JSON.parse(JSON.stringify(controller.action.command));
@@ -177,44 +186,62 @@ function updateGame() {
 	display.drawController(controller);
 }
 
+function pauseGame() {
+	display.pauseMenu();
+	update = screenUpdates[pause];
+}
+
+function updatePause() {
+
+}
+
+///// WIN SCREEN /////
+
 function updateEnd() {
 	display.clearGameBoard();
 	if (controller.quit) { display.exit(); process.exit(); }
 }
 
-const screens = {
+
+
+game.buildDeck();
+display.init();
+display.drawMainMenu(controller.menuOption);
+//display.debug(game);
+display.debugController(game, controller, history);
+
+let screenUpdates = {
 	menu: updateMenu,
 	game: updateGame,
+	pause: updatePause,
 	end: updateEnd,
 }
 
-let update = screens.menu;
+let screen = 'menu';
+let update = screenUpdates[screen];
 
-const switchTo = function(screen) {
-	if (update == screens.menu) {
-		if (screen == 'game') {
-			game.shuffle();
-			game.dealCards();
-			//game.almostWin();
-			display.init();
-			display.drawGameBoard(game);
-			display.drawController(controller);
-			update = screens.game;
-			return;
-		}
-	} else if (update == screens.game) {
-		if (screen == 'menu') {
-			display.clearGameBoard();
-			display.drawMainMenu(controller.menuOption);
-			update = screens.menu;
-			return;
-		}
-	}
+function switchTo(name) {
+	clearScreen(screen);
+	startScreen(name);
+	screen = name;
+	update = screenUpdates[name];
 }
 
+function clearScreen(name) {
+	if (name == 'menu') display.init();
+	else if (name == 'game') display.clearGameBoard();
+}
 
-//display.debug(game);
-//display.debugController(game, controller, history);
+function startScreen(name) {
+	if (name == 'menu') {
+		display.drawMainMenu(controller.menuOption);
+	} else if (name == 'game') {
+		game.shuffle().restart();
+		controller.setBuffer();
+		display.drawGameBoard(game);
+		display.drawController(controller);
+	}
+}
 
 let keypress = require("keypress");
 keypress(process.stdin);
@@ -222,7 +249,7 @@ process.stdin.setRawMode(true);
 
 process.stdin.on("keypress", function(ch, k) {
 	let key = (k == undefined) ? ch : k;
-	/*
+	/* Use this scrolling dynamically
 	if (key.name == 'up') { process.stdout.write('\033[0;0f\033[M'); return; }
 	if (key.name == 'down') { 
 		for (let i = 0; i < 5; i++)
@@ -234,5 +261,5 @@ process.stdin.on("keypress", function(ch, k) {
 	controller.update(key.name);
 	update();
 	//display.debug(game);
-	//display.debugController(game, controller, history);
+	display.debugController(game, controller, history);
 });

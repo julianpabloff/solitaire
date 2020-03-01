@@ -7,7 +7,7 @@ const Game = function() {
 	this.stock = [];
 	this.drawAmount = 1;
 	this.waste = [];
-	this.foundations = [[],[],[],[]];
+	this.foundations = [];
 
 	this.buildDeck = function() {
 		for (let suit of suits) {
@@ -36,14 +36,25 @@ const Game = function() {
 		for (let i = 0; i < 7; i++) this.piles.push([]);
 		this.piles[0].push(cards[cards.length - 1]);
 	}
-	
-	this.dealCards = function() {
+
+	this.restart = function() {
+		//for (let p in this.piles) this.piles.pop();
+		//for (let s in this.stock) this.stock.pop();
+		//for (let w in this.waste) this.waste.pop();
+		//for (let f in this.foundations) this.foundations.pop();
+		// I guess only the literal work?
 		this.piles = [];
 		this.stock = [];
 		this.waste = [];
-		this.foundations = [[],[],[],[]];
+		this.foundations = [];
+		this.dealCards();
+		return this;
+	}
+	
+	this.dealCards = function() {
 		let cardsIndex = 0;
 		for (let i = 0; i < 7; i++) { // 7 piles
+			if (i < 4) this.foundations.push([]);
 			this.piles.push([]);
 			for (let j = 0; j < i + 1; j++) { // with increasing amounts
 				if (j < i) cards[cardsIndex].faceUp = false;
@@ -152,6 +163,7 @@ const Game = function() {
 		let firstCard = firstPile[depth];
 		let secondCard = secondPile[secondPile.length - 1];
 
+		let valid;
 		if (validate) valid = this.validPair(firstCard, secondCard);
 		else valid = true;
 		if (valid) {
@@ -161,7 +173,6 @@ const Game = function() {
 
 			if (firstPileLength > 0)
 				this.piles[first.index][firstPileLength - 1].faceUp = true;
-
 
 			return {
 				initialLength: [firstInitalLength, secondInitalLength],
