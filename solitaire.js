@@ -10,8 +10,12 @@ function updateMenu() {
 	controller.handleMenu();
 	display.drawMainMenu(controller.menuOption);
 	if (controller.submit) {
-		if (controller.menuOption == 0) switchTo('game');
-		if (controller.menuOption == 3) {
+		if (controller.menuOption == 0)
+			switchTo('game');
+		else if (controller.menuOption == 2) {
+			switchTo('settings');
+		}
+		else if (controller.menuOption == 3) {
 			display.exit();
 			console.clear();
 			process.exit();
@@ -38,16 +42,19 @@ function updateGame() {
 	}
 
 	if (controller.pause) {
-		display.pauseMenu();
+		display.drawPauseMenu(controller.pauseOption);
+		update = screenUpdates['pause'];
 		return;
 	}
 
+
 	//if (controller.quit) { display.exit(); process.exit(); }
+	/*
 	if (controller.quit) {
 		controller.toMode = false;
 		switchTo('menu');
 		return;
-	}
+	}*/
 
 	/* Disabling undo for now
 	if (controller.undo && history.length > 0) {
@@ -186,13 +193,57 @@ function updateGame() {
 	display.drawController(controller);
 }
 
-function pauseGame() {
-	display.pauseMenu();
-	update = screenUpdates[pause];
-}
+///// PAUSE //////
 
 function updatePause() {
+	controller.handlePause();
+	if (controller.pause == false) {
+		display.clearPauseMenu(game.piles[3]);
+		display.drawController(controller);
+		update = screenUpdates['game'];
+	}
+	else if (controller.submit) {
+		if (controller.pauseOption == 2) {
+			controller.toMode = false;
+			switchTo('menu');
+		}
+		controller.resetPause();
+	}
+	else display.drawPauseMenu(controller.pauseOption);
+}
 
+///// SETTINGS /////
+
+const allSettings = {
+	theme: ['normal', 'light', 'dark', 'ice'],
+	label: [true, false],
+	draw: [1, 3]
+};
+
+const settingCounts = []; // [4, 2, 2]
+for (let k of Object.keys(allSettings))
+	settingCounts.push(allSettings[k].length);
+
+//Temporary
+let jsonSettings = {
+	theme: 'normal',
+	label: false,
+	draw: 1
+};
+function genControllerSettingsCode(settings) {
+	let code = [];
+	for (let k of Object.keys(settings))
+		code.push(allSettings[k].indexOf(settings[k]));
+	return code;
+}
+controller.settings.code = genControllerSettingsCode(jsonSettings);
+
+function updateSettings() {
+	controller.handleSettings(settingCounts);
+	if (controller.quit) {
+		process.exit();
+	}
+	display.updateSettings(controller.settings.buffer, controller.settings.code);
 }
 
 ///// WIN SCREEN /////
@@ -208,12 +259,13 @@ game.buildDeck();
 display.init();
 display.drawMainMenu(controller.menuOption);
 //display.debug(game);
-display.debugController(game, controller, history);
+//display.debugController(game, controller, history);
 
 let screenUpdates = {
 	menu: updateMenu,
 	game: updateGame,
 	pause: updatePause,
+	settings: updateSettings,
 	end: updateEnd,
 }
 
@@ -222,9 +274,9 @@ let update = screenUpdates[screen];
 
 function switchTo(name) {
 	clearScreen(screen);
-	startScreen(name);
 	screen = name;
 	update = screenUpdates[name];
+	startScreen(name);
 }
 
 function clearScreen(name) {
@@ -240,6 +292,10 @@ function startScreen(name) {
 		controller.setBuffer();
 		display.drawGameBoard(game);
 		display.drawController(controller);
+	} else if (name == 'settings') {
+		display.drawSettings();
+		display.updateSettings(controller.settings.buffer, controller.settings.code);
+		display.drawPreview(jsonSettings);
 	}
 }
 
@@ -261,5 +317,5 @@ process.stdin.on("keypress", function(ch, k) {
 	controller.update(key.name);
 	update();
 	//display.debug(game);
-	display.debugController(game, controller, history);
+	//display.debugController(game, controller, history);
 });

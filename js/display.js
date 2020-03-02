@@ -6,7 +6,7 @@ const Display = function() {
 	this.init = function() {
 		this.clear();
 		stdout.cursorTo(0,0);
-		greenBackground();
+		drawBackground('green');
 		stdout.write('\x1b[?25l');
 	}
 
@@ -15,9 +15,10 @@ const Display = function() {
 		columns = stdout.columns;
 
 		cardX = Math.floor((columns - (cardWidth + margin) * 7 + margin) / 2);
-		//cardY = Math.floor((rows - cardHeight) / 2);
-		cardY = 40;
+		cardY = Math.floor((rows - cardHeight) / 2);
+		//cardY = 40;
 		topY = cardY - cardHeight - margin;
+		settingsX = Math.floor(columns / 2 - 36);
 
 		wastePos = {x: cardX + cardWidth + margin, y: topY};
 		stockPos = {x: cardX, y: topY};
@@ -30,13 +31,21 @@ const Display = function() {
 	let rows, columns, cardX, cardY;
 	let wastePos, stockPos, foundationPos;
 	let margin = 4;
+	let settingsX;
 	this.setSize();
 
+	const findPileX = function(index) {
+		return cardX + (cardWidth + margin) * index;
+	}
+
 	const colors = {
-		fg : {black:'\x1b[30m', red:'\x1b[31m', green:'\x1b[32m', white:'\x1b[37m', reset:'\x1b[0m'},
-		bg : {black:'\x1b[40m', red:'\x1b[41m', green:'\x1b[42m', white:'\x1b[47m', reset:'\x1b[0m'},
+		fg : { black:'\x1b[30m', red:'\x1b[31m', green:'\x1b[32m', blue:'\x1b[34m', cyan:'\x1b[36m', white:'\x1b[37m', reset:'\x1b[0m' },
+		bg : { black:'\x1b[40m', red:'\x1b[41m', green:'\x1b[42m', blue:'\x1b[44m', cyan:'\x1b[46m', white:'\x1b[47m', reset:'\x1b[0m' },
 		reset : '\x1b[0m'
 	};
+	const fullColor = function(fg, bg) {
+		return colors.fg[fg] + colors.bg[bg];
+	}
 
 	let foreground = colors.reset;
 	let background = colors.reset;
@@ -52,9 +61,8 @@ const Display = function() {
 	const setColor = function(fg, bg) {
 		setFg(fg); setBg(bg);
 	}
-
-	const greenBackground = function() {
-		stdout.write(colors.bg.green);
+	const drawBackground = function(color) {
+		stdout.write(colors.bg[color]);
 		for (let r = 0; r < rows; r++) {
 			for (let c = 0; c < columns; c++) {
 				stdout.write(' ');
@@ -94,6 +102,7 @@ const Display = function() {
 		'                                                                                                 ',
 	];
 	const options = ['  NEW GAME  ', '  CONTINUE  ', '  SETTINGS  ', '    QUIT    '];
+	const pauseOptions = ['   RESUME   ', '  SETTINGS  ', ' SAVE && QUIT '];
 
 	const centerString = function(string) { return Math.floor(columns/2) - Math.floor(string.length/2) }
 
@@ -104,15 +113,13 @@ const Display = function() {
 			stdout.write('─');
 		}
 		stdout.write('┐');
-		} else {
-			for (let i = 0; i < height - 2; i++) {
-				stdout.cursorTo(x, y + 1 + i);
-				stdout.write('│');
-				if (fill) for (let j = 0; j < width - 2; j++)
-					stdout.write(' ');
-				stdout.cursorTo(x + width - 1, y + 1 + i);
-				stdout.write('│');
-			}
+		for (let i = 0; i < height - 2; i++) {
+			stdout.cursorTo(x, y + 1 + i);
+			stdout.write('│');
+			if (fill) for (let j = 0; j < width - 2; j++)
+				stdout.write(' ');
+			stdout.cursorTo(x + width - 1, y + 1 + i);
+			stdout.write('│');
 		}
 		stdout.cursorTo(x, y + height - 1);
 		stdout.write('└');
@@ -144,11 +151,10 @@ const Display = function() {
 		this.drawSquare(boxX, optionsY - 1, boxWidth, options.length + 5, false);
 		for (let i = 0; i < options.length; i++) {
 			stdout.cursorTo(centerString(options[i]), optionsY + 2 * i);
-			if (i == selectedIndex) {
+			if (i == selectedIndex)
 				setColor('black', 'white');
-			} else {
+			else
 				setColor('white', 'black');
-			}
 			stdout.write(options[i]);
 		}
 	}
@@ -252,10 +258,34 @@ const Display = function() {
 		}
 	}
 
-	this.pauseMenu = function() {
-		let x = cardX + (cardWidth + margin) * 2 + 8;
+	const pauseWidth = 20;
+	const pauseHeight = 7;
+	const pauseX = cardX + (cardWidth + margin) * 3 - 3;
+	const pauseY = cardY - 3;
+	this.drawPauseMenu = function(selectedIndex) {
+		let width = 20;
+		let height = 7;
+		let x = Math.floor(columns / 2 - width / 2);
 		let y = cardY - 3;
-		stdout.write(colors.reset);
+		setColor('white', 'black');
+		this.drawSquare(pauseX, pauseY, pauseWidth, pauseHeight, true);
+		for (let i = 0; i < pauseOptions.length; i++) {
+			stdout.cursorTo(centerString(pauseOptions[i]), y + 1 + i * 2);
+			if (i == selectedIndex)
+				setColor('black', 'white');
+			else
+				setColor('white', 'black');
+			stdout.write(pauseOptions[i]);
+		}
+	}
+	this.clearPauseMenu = function(pile) {
+		setColor('green', 'green');
+		this.drawSquare(pauseX, pauseY, pauseWidth, pauseHeight, true);
+		let x = findPileX(3);
+		for (let i = 0; i < pile.length; i++) {
+			if (pile[i].faceUp) this.drawCard(pile[i], x, cardY + 2 * i);
+			else this.drawCardBack(x, cardY + 2 * i);
+		}
 	}
 
 	this.wasteLength = 0;
@@ -313,7 +343,7 @@ const Display = function() {
 		}
 		if (diff > 0) { // The pile that gains cards
 			let y = cardY + 2 * (pile.length - Math.abs(diff));
-			for (i = 0; i < Math.abs(diff); i++) {
+			for (let i = 0; i < Math.abs(diff); i++) {
 				let card = pile[pile.length - diff + i];
 				if (card.faceUp) this.drawCard(card, x, y + 2 * i);
 			}
@@ -457,6 +487,138 @@ const Display = function() {
 			console.log(command);
 		}
 	}
+
+////SETTINGS//////////////////////////////////////////////////////////////////////////////////
+
+	const settingsLogo = [
+		'▄▄▄▄ ▄▄▄▄ ▄▄▄▄▄ ▄▄▄▄▄ ▄▄▄▄▄ ▄▄▄▄ ▄▄▄▄ ▄▄▄▄',
+		'█▄▄▄ █▄▄▄   █     █     █   █  █ █ ▄▄ █▄▄▄',
+		'▄▄▄█ █▄▄▄   █     █   ▄▄█▄▄ █  █ █▄▄█ ▄▄▄█'
+	];
+
+	this.drawSettings = function() {
+		drawBackground('black');
+		setFg('white');
+		for (let i = 0; i < settingsLogo.length; i++) {
+			stdout.cursorTo(settingsX, topY + i);
+			stdout.write(settingsLogo[i]);
+		}
+	}
+	this.updateSettings = function(buffer, code) {
+		let items = [' THEME        ', ' LABELS       ', ' DIFFICULTY   '];
+		let options = [
+			[' NORMAL       ', ' LIGHT        ', ' DARK         ', ' ICE          '],
+			[' ENABLED      ', ' DISABLED     '],
+			[' DRAW 1       ', ' DRAW 3       ']
+		];
+
+		setColor('white', 'black');
+		this.drawSquare(settingsX - 1, topY + 4, 16, 5, false);
+		for (let i = 0; i < items.length; i++) {
+			stdout.cursorTo(settingsX, topY + 5 + i);
+			if (i == buffer[0]) setColor('black', 'white');
+			else setColor('white', 'black');
+			stdout.write(items[i]);
+		}
+		if (buffer.length == 1) {
+			setColor('black', 'black');
+			this.drawSquare(settingsX + 16, topY + 4, 16, 6, true);
+		}
+		if (buffer.length == 2) {
+			setColor('white', 'black');
+			this.drawSquare(settingsX + 16, topY + 4, 16, 2 + options[buffer[0]].length, false);
+			for (let i = 0; i < options[buffer[0]].length; i++) {
+				stdout.cursorTo(settingsX + 17, topY + 5 + i);
+				if (i == buffer[1]) setColor('black', 'white');
+				else setColor('white', 'black');
+				stdout.write(options[buffer[0]][i]);
+			}
+		}
+
+		//DEBUG
+		setColor('white', 'black');
+		stdout.cursorTo(settingsX, topY + 30);
+		stdout.write('buffer:          ');
+		stdout.cursorTo(settingsX + 8, topY + 30);
+		console.log(buffer);
+		stdout.cursorTo(settingsX, topY + 32);
+		console.log(code);
+	}
+
+	this.themes = {
+		normal: {
+			one: fullColor('white', 'red'),
+			two: fullColor('white', 'black'),
+			bac: fullColor('black', 'white'),
+			tab: fullColor('black', 'green'),
+			cur: fullColor('black', 'white'),
+			tom: fullColor('white', 'black')
+		},
+		light: {
+			one: fullColor('red', 'white'),
+			two: fullColor('black', 'white'),
+			bac: colors.fg.black + colors.bg.white,
+			tab: colors.fg.black + colors.bg.white,
+			cur: colors.fg.white + colors.bg.black,
+			tom: fullColor('white', 'red')
+		},
+		dark: {
+			one: colors.fg.red + colors.bg.black,
+			two: colors.fg.white + colors.bg.black,
+			bac: colors.fg.white + colors.bg.black,
+			tab: colors.fg.white + colors.bg.black,
+			cur: colors.fg.black + colors.bg.white,
+			tom: fullColor('white', 'red')
+		},
+		ice: {
+			one: colors.fg.black + colors.bg.cyan,
+			two: colors.fg.white + colors.bg.blue,
+			bac: colors.fg.black + colors.bg.white,
+			tab: colors.fg.white + colors.bg.black,
+			cur: colors.fg.black + colors.bg.white,
+			tom: fullColor('black', 'cyan')
+		},
+	}
+
+	this.drawPreview = function(settings) {
+		let one = this.themes[settings.theme].one; // Card color one
+		let two = this.themes[settings.theme].two; // Card color two
+		let bac = this.themes[settings.theme].bac; // Back of card color
+		let tab = this.themes[settings.theme].tab; // Table color
+		let cur = this.themes[settings.theme].cur; // Cursor color
+		let tom = this.themes[settings.theme].tom; // To Mode color
+		
+		let preview = [
+			one + ' ' + two + '│            │' + tab + '              ░░░░░░░░░░░░░░    ░░░░░░░░░░░░░░    ' + one + '│      ',
+			one + ' ' + two + '│          J │' + tab + '              ░░░░░░░░░░░░░░    ░░░░░░░░░░░░░░    ' + one + '│      ',
+			one + '─' + two + '└────────────┘' + tab + '              ░░░░░░░░░░░░░░    ░░░░░░░░░░░░░░    ' + one + '└──────',
+			tab + '                                                                        ',
+			tab + '                                                                        ',
+			tab + 'E 2        ' + cur + '    PILE 3    ' + tab + '        PILE 4        ' + tom + '    PILE 5    ' + tab + '        PIL',
+			tab + '                                                                        ',
+			two + '──────┐' + tab + '    ' + bac + '┌────────────┐' + tab + '    ' + one + '┌────────────┐' + tab + '    ' + bac + '┌────────────┐' + tab + '    ' + bac + '┌──────',
+			two + '      │' + tab + '    ' + bac + '│. . . . . . │' + tab + '    ' + one + '│ K          │' + tab + '    ' + bac + '│. . . . . . │' + tab + '    ' + bac + '│. . . ',
+			one + '──────┐' + tab + '    ' + bac + '┌────────────┐' + tab + '    ' + two + '┌────────────┐' + tab + '    ' + bac + '┌────────────┐' + tab + '    ' + bac + '┌──────',
+			one + '      │' + tab + '    ' + bac + '│. . . . . . │' + tab + '    ' + two + '│ Q          │' + tab + '    ' + bac + '│. . . . . . │' + tab + '    ' + bac + '│. . . ',
+			one + ' _    │' + tab + '    ' + two + '┌────────────┐' + tab + '    ' + one + '┌────────────┐' + tab + '    ' + bac + '┌────────────┐' + tab + '    ' + bac + '┌──────',
+			one + '/ \\   │' + tab + '    ' + two + '│ J          │' + tab + '    ' + one + '│ J          │' + tab + '    ' + bac + '│. . . . . . │' + tab + '    ' + bac + '│. . . ',
+			one + '  /   │' + tab + '    ' + one + '┌────────────┐' + tab + '    ' + two + '┌────────────┐' + tab + '    ' + one + '┌────────────┐' + tab + '    ' + bac + '┌──────',
+			one + ' /    │' + tab + '    ' + one + '│ 10         │' + tab + '    ' + two + '│ 10         │' + tab + '    ' + one + '│ 8          │' + tab + '    ' + bac + '│. . . ',
+			one + '/     │' + tab + '    ' + two + '┌────────────┐' + tab + '    ' + two + '│     /\\     │' + tab + '    ' + two + '┌────────────┐' + tab + '    ' + two + '┌──────',
+			one + '      │' + tab + '    ' + two + '│ 9          │' + tab + '    ' + two + '│    /  \\    │' + tab + '    ' + two + '│ 7          │' + tab + '    ' + two + '│ 6    '
+		];
+		let noLabel = tab + '           ' + cur + '              ' + tab + '                      ' + tom + '              ' + tab + '           ';
+
+		for (let i = 0; i < preview.length; i++) {
+			stdout.cursorTo(settingsX, topY + 11 + i);
+			if (i == 5 && !settings.label) {
+				stdout.write(noLabel);
+			} else stdout.write(preview[i]);
+		}
+		setColor('white', 'black');
+		this.drawSquare(settingsX - 1, topY + 10, 74, preview.length + 2, false);
+	}
+
 
 }
 

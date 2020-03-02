@@ -9,9 +9,21 @@ const Controller = function() {
 	}
 	this.setBuffer();
 	this.menuOption = 0;
+	this.pauseOption = 0;
 	this.action = {execute: false, command: []};
 	this.toMode = false;
 	// this.pileData and this.gameData from main file
+
+	this.settings = new (require('./controller_settings.js'));
+
+	const cycleDown = function(index, length) {
+		if (index == 0) return length - 1;
+		else return index - 1;
+	}
+	const cycleUp = function(index, length) {
+		if (index == length - 1) return 0;
+		else return index + 1;
+	}
 
 	this.update = function(key) {
 		this.updated = false;
@@ -19,7 +31,6 @@ const Controller = function() {
 		this.up = this.down = this.left = this.right = false;
 		this.to = this.waste = this.esc = this.undo = false;
 		this.jumpTo = null;
-		this.pause = false;
 
 		switch(key) {
 			case 'up' : case 'k' : this.up = true; break;
@@ -55,6 +66,26 @@ const Controller = function() {
 		if (this.down) {
 			if (this.menuOption == 3) this.menuOption = 0;
 			else this.menuOption++;
+		}
+		if (this.jumpTo !== null && (this.jumpTo >= 1 || this.jumpTo <= 4))
+			this.menuOption = this.jumpTo;
+	}
+
+	this.resetPause = function() {
+		this.pause = false;
+		this.pauseOption = 0;
+	}
+
+	this.handlePause = function() {
+		if (this.esc || this.submit && this.pauseOption == 0)
+			this.resetPause();
+		else if (this.up) {
+			if (this.pauseOption == 0) this.pauseOption = 2;
+			else this.pauseOption--;
+		}
+		else if (this.down) {
+			if (this.pauseOption == 2) this.pauseOption = 0;
+			else this.pauseOption++;
 		}
 	}
 
@@ -143,19 +174,16 @@ const Controller = function() {
 				this.buffer.push({type: 'pile', index: first.index, depth: 0, fullDepth: this.fullDepth(first.index, 0)});
 				first.fullDepth = this.fullDepth(first.index, first.depth);
 			}
-
 			if (this.submit) {
 				let suitIndex = suits.indexOf(this.gameData.piles[first.index][this.gameData.piles[first.index].length - 1].suit);
 				this.buffer.push({type: 'foundation', index: suitIndex, depth: null});
 				this.handleBuffer();
 				return;
 			}
-
 			if (this.esc) {
 				if (!this.pause) this.pause = true;
 				else this.pause = false;
 			}
-
 		} else {
 		}
 		this.action = {execute: false, command: []};
@@ -188,8 +216,11 @@ const Controller = function() {
 	this.fullDepth = function(index, faceUpDepth) {
 		return this.gameData.piles[index].length - this.pileData[index] + faceUpDepth;
 	}
-}
 
+	this.handleSettings = function(counts) {
+		this.settings.handleBuffer(this, counts);
+	}
+}
 
 
 
