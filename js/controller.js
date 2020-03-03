@@ -14,8 +14,6 @@ const Controller = function() {
 	this.toMode = false;
 	// this.pileData and this.gameData from main file
 
-	this.settings = new (require('./controller_settings.js'));
-
 	const cycleDown = function(index, length) {
 		if (index == 0) return length - 1;
 		else return index - 1;

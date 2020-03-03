@@ -1,14 +1,12 @@
 const Display = function() {
 
-	this.settings = new (require('./display_settings.js'));
-
 	let stdout = process.stdout;
 
 	this.clear = () => stdout.write('\x1b[2J');
 	this.init = function() {
 		this.clear();
 		stdout.cursorTo(0,0);
-		drawBackground('green');
+		this.drawBackground('green');
 		stdout.write('\x1b[?25l');
 	}
 
@@ -18,10 +16,13 @@ const Display = function() {
 
 		cardX = Math.floor((columns - (cardWidth + margin) * 7 + margin) / 2);
 		cardY = Math.floor((rows - cardHeight) / 2);
-		//cardY = 40;
-		topY = cardY - cardHeight - margin;
+		// cardY = 40;
+
+		// Settings
 		settingsX = Math.floor(columns / 2 - 36);
 
+		// Game related
+		topY = cardY - cardHeight - margin;
 		wastePos = {x: cardX + cardWidth + margin, y: topY};
 		stockPos = {x: cardX, y: topY};
 		foundationPos = {x: [], y: topY};
@@ -29,13 +30,13 @@ const Display = function() {
 			foundationPos.x.push(cardX + (cardWidth + margin) * (3 + i));
 	}
 
-	let cardWidth = 14; let cardHeight = 10;
+	let cardWidth = 14; let cardHeight = 10; let margin = 4;
 	let rows, columns, cardX, cardY;
 	let wastePos, stockPos, foundationPos;
-	let margin = 4;
 	let settingsX;
 	this.setSize();
 
+	// Game related
 	const findPileX = function(index) {
 		return cardX + (cardWidth + margin) * index;
 	}
@@ -45,25 +46,25 @@ const Display = function() {
 		bg : { black:'\x1b[40m', red:'\x1b[41m', green:'\x1b[42m', blue:'\x1b[44m', cyan:'\x1b[46m', white:'\x1b[47m', reset:'\x1b[0m' },
 		reset : '\x1b[0m'
 	};
-	const fullColor = function(fg, bg) {
+	this.fullColor = function(fg, bg) {
 		return colors.fg[fg] + colors.bg[bg];
 	}
 
 	let foreground = colors.reset;
 	let background = colors.reset;
 
-	const setFg = function(colorName) { 
+	this.setFg = function(colorName) { 
 		stdout.write(colors.fg[colorName]);
 		foreground = colors.fg[colorName];
 	}
-	const setBg = function(colorName) { 
+	this.setBg = function(colorName) { 
 		stdout.write(colors.bg[colorName]);
 		background = colors.bg[colorName];
 	}
-	const setColor = function(fg, bg) {
-		setFg(fg); setBg(bg);
+	this.setColor = function(fg, bg) {
+		this.setFg(fg); this.setBg(bg);
 	}
-	const drawBackground = function(color) {
+	this.drawBackground = function(color) {
 		stdout.write(colors.bg[color]);
 		for (let r = 0; r < rows; r++) {
 			for (let c = 0; c < columns; c++) {
@@ -135,7 +136,7 @@ const Display = function() {
 		let y = Math.floor(rows * 0.35);
 		const options = ['  NEW GAME  ', '  CONTINUE  ', '  SETTINGS  ', '    QUIT    '];
 
-		setFg('white'); setBg('black');
+		this.setColor('white', 'black');;
 		this.drawSquare(x-1, y-1, logo[0].length + 2, logo.length + 2, false);
 		for (let i = 0; i < logo.length; i++) {
 			stdout.cursorTo(x, y + i);
@@ -144,20 +145,14 @@ const Display = function() {
 		let optionsY = y + logo.length + 4;
 		let boxWidth = 16;
 		let boxX = Math.floor(columns/2) - Math.floor(boxWidth/2);
-		setBg('black'); setFg('white');
-		for (let i = 0; i < options.length + 5; i++) {
-			stdout.cursorTo(boxX, optionsY - 1 + i);
-			for (let j = 0; j < boxWidth; j++) {
-				stdout.write(' ');
-			}
-		}
-		this.drawSquare(boxX, optionsY - 1, boxWidth, options.length + 5, false);
+
+		this.drawSquare(boxX, optionsY - 1, boxWidth, options.length + 5, true);
 		for (let i = 0; i < options.length; i++) {
 			stdout.cursorTo(centerString(options[i]), optionsY + 2 * i);
 			if (i == selectedIndex)
-				setColor('black', 'white');
+				this.setColor('black', 'white');
 			else
-				setColor('white', 'black');
+				this.setColor('white', 'black');
 			stdout.write(options[i]);
 		}
 	}
@@ -191,9 +186,9 @@ const Display = function() {
 		let suit = card.suit;
 		let value = cardVals[card.value];
 
-		setFg('white');
-		if (suit == 'h' || suit == 'd') setBg('red');
-		else setBg('black');
+		this.setFg('white');
+		if (suit == 'h' || suit == 'd') this.setBg('red');
+		else this.setBg('black');
 		this.drawCardBox(x, y);
 		for (let i = 0; i <= 4; i++) {
 			stdout.cursorTo(x + 3, y + 2 + i);
@@ -207,7 +202,7 @@ const Display = function() {
 	}
 
 	this.drawCardBack = function(x, y) {
-		setColor('black', 'white');
+		this.setColor('black', 'white');
 		this.drawCardBox(x, y);
 		for (let i = 1; i < 9; i += 2) {
 			stdout.cursorTo(x + 1, y+i);
@@ -218,7 +213,7 @@ const Display = function() {
 	}
 
 	this.drawFoundationSpot = function(x, y) {
-		setColor('black', 'green');
+		this.setColor('black', 'green');
 		for (let i = 0; i < 10; i++) {
 			stdout.cursorTo(x, y + i);
 			stdout.write('░░░░░░░░░░░░░░');
@@ -227,7 +222,7 @@ const Display = function() {
 	}
 
 	this.clearCard = function(x, y) {
-		setBg('green');
+		this.setBg('green');
 		for (let i = 0; i < cardHeight; i++) {
 			stdout.cursorTo(x, y+i);
 			stdout.write('              ');
@@ -252,7 +247,7 @@ const Display = function() {
 	}
 
 	this.clearGameBoard = function() {
-		setBg('green');
+		this.setBg('green');
 		for (let i = topY - 2; i < rows; i++) {
 			stdout.cursorTo(0, i);
 			for (let j = 0; j < columns; j++) {
@@ -270,19 +265,19 @@ const Display = function() {
 		let height = 7;
 		let x = Math.floor(columns / 2 - width / 2);
 		let y = cardY - 3;
-		setColor('white', 'black');
+		this.setColor('white', 'black');
 		this.drawSquare(pauseX, pauseY, pauseWidth, pauseHeight, true);
 		for (let i = 0; i < pauseOptions.length; i++) {
 			stdout.cursorTo(centerString(pauseOptions[i]), y + 1 + i * 2);
 			if (i == selectedIndex)
-				setColor('black', 'white');
+				this.setColor('black', 'white');
 			else
-				setColor('white', 'black');
+				this.setColor('white', 'black');
 			stdout.write(pauseOptions[i]);
 		}
 	}
 	this.clearPauseMenu = function(pile) {
-		setColor('green', 'green');
+		this.setColor('green', 'green');
 		this.drawSquare(pauseX, pauseY, pauseWidth, pauseHeight, true);
 		let x = findPileX(3);
 		for (let i = 0; i < pile.length; i++) {
@@ -336,7 +331,7 @@ const Display = function() {
 			}*/
 			let i = 0;
 			while (i < 10 + 2 * (Math.abs(diff) - 1)) {
-				setBg('green');
+				this.setBg('green');
 				stdout.cursorTo(x, y + i);
 				stdout.write('              ');
 				i++;
@@ -356,7 +351,7 @@ const Display = function() {
 	this.drawController = function(controller) {
 		let buffer = controller.buffer;
 
-		setBg('green'); setFg('black');
+		this.setColor('black', 'green');
 		for (let i = 0; i < 7; i++) {
 			stdout.cursorTo(cardX + i * (cardWidth + margin), cardY - 2);
 			stdout.write(pileName(i)); // Enable to write the piles that the cursor isn't on
@@ -369,12 +364,12 @@ const Display = function() {
 		if (buffer.length == 1) {
 			if (buffer[0].type == 'pile') {
 				let index = buffer[0].index;
-				setBg('white');
+				this.setBg('white');
 				stdout.cursorTo(cardX + index * (cardWidth + margin), cardY - 2);
 				stdout.write(pileName(index));
 			}
 			if (buffer[0].type == 'waste') {
-				setBg('white');
+				this.setBg('white');
 				stdout.cursorTo(wasteX, topY - 2);
 				stdout.write('   TOP PILE   ');
 			}
@@ -387,18 +382,18 @@ const Display = function() {
 
 			if (controller.toMode) {
 				if (buffer[0].type == 'pile') {
-					setFg('white'); setBg('black');
+					this.setColor('white', 'black');
 					stdout.cursorTo(firstX, cardY - 2);
 					stdout.write(pileName(firstIndex));
 				}
 				if (buffer[0].type == 'waste') {
-					setFg('white'); setBg('black');
+					this.setColor('white', 'black');
 					stdout.cursorTo(wasteX, topY - 2);
 					stdout.write('   TOP PILE   ');
 				}
 				if (secondIndex != firstIndex || buffer[0].type == 'waste') {
 					stdout.cursorTo(secondX, cardY - 2);
-					setFg('black'); setBg('white');
+					this.setColor('black', 'white');
 					stdout.write(pileName(secondIndex));
 				}
 			}
@@ -450,11 +445,11 @@ const Display = function() {
 			}
 		}
 		function drawCardText(card, x, y) {
-			if (card.suit == 'h' || card.suit == 'd') setFg('red');
-			else setFg('white');
+			if (card.suit == 'h' || card.suit == 'd') this.setFg('red');
+			else this.setFg('white');
 			stdout.cursorTo(x,y);
 			stdout.write(card.value.toString() + card.suit);
-			setFg('white');
+			this.setFg('white');
 		}
 
 	}
@@ -489,149 +484,6 @@ const Display = function() {
 			let command = history[history.length-1];
 			console.log(command);
 		}
-	}
-
-////SETTINGS//////////////////////////////////////////////////////////////////////////////////
-
-	const settingsLogo = [
-		'▄▄▄▄ ▄▄▄▄ ▄▄▄▄▄ ▄▄▄▄▄ ▄▄▄▄▄ ▄▄▄▄ ▄▄▄▄ ▄▄▄▄',
-		'█▄▄▄ █▄▄▄   █     █     █   █  █ █ ▄▄ █▄▄▄',
-		'▄▄▄█ █▄▄▄   █     █   ▄▄█▄▄ █  █ █▄▄█ ▄▄▄█'
-	];
-
-	this.drawSettings = function() {
-		drawBackground('black');
-		setFg('white');
-		for (let i = 0; i < settingsLogo.length; i++) {
-			stdout.cursorTo(settingsX, topY + i);
-			stdout.write(settingsLogo[i]);
-		}
-		stdout.cursorTo(settingsX, topY + 29);
-		stdout.write('press esc when done');
-	}
-	this.updateSettings = function(buffer, code) {
-		let items = ['THEME', 'LABELS', 'DIFFICULTY'];
-		let options = [
-			['NORMAL', 'LIGHT', 'DARK', 'ICE'],
-			['ENABLED', 'DISABLED'],
-			['DRAW 1', 'DRAW 3']
-		];
-
-		setColor('white', 'black');
-		this.drawSquare(settingsX - 1, topY + 4, 23, 5, false);
-		for (let i = 0; i < items.length; i++) {
-			stdout.cursorTo(settingsX, topY + 5 + i);
-			if (i == buffer[0]) setColor('black', 'white');
-			else setColor('white', 'black');
-			let output = options[i][code[i]];
-			stdout.write(' ' + items[i] + ' - ' + output);
-			let spaceAmount = 20 - (items[i].length + 3 + output.length);
-			for (let j = 0; j < spaceAmount; j++)
-				stdout.write(' ');
-		}
-		if (buffer.length == 1) {
-			setColor('black', 'black');
-			this.drawSquare(settingsX + 23, topY + 4, 16, 6, true);
-		}
-		if (buffer.length == 2) {
-			setColor('white', 'black');
-			this.drawSquare(settingsX + 23, topY + 4, 16, 2 + options[buffer[0]].length, false);
-			for (let i = 0; i < options[buffer[0]].length; i++) {
-				stdout.cursorTo(settingsX + 24, topY + 5 + i);
-				if (i == buffer[1]) setColor('black', 'white');
-				else setColor('white', 'black');
-				let output = options[buffer[0]][i];
-				stdout.write(' ' + output);
-				let spaceAmount = 13 - output.length;
-				for (let j = 0; j < spaceAmount; j++)
-					stdout.write(' ');
-			}
-		}
-
-		//DEBUG
-		/*
-		setColor('white', 'black');
-		stdout.cursorTo(settingsX, topY + 30);
-		stdout.write('buffer:          ');
-		stdout.cursorTo(settingsX + 8, topY + 30);
-		console.log(buffer);
-		stdout.cursorTo(settingsX, topY + 32);
-		console.log(code);
-		*/
-	}
-
-	const themes = [
-		{ // NORMAL
-			one: fullColor('white', 'red'),
-			two: fullColor('white', 'black'),
-			bac: fullColor('black', 'white'),
-			tab: fullColor('black', 'green'),
-			cur: fullColor('black', 'white'),
-			tom: fullColor('white', 'black')
-		},
-		{ // LIGHT
-			one: fullColor('red', 'white'),
-			two: fullColor('black', 'white'),
-			bac: colors.fg.black + colors.bg.white,
-			tab: colors.fg.black + colors.bg.white,
-			cur: colors.fg.white + colors.bg.black,
-			tom: fullColor('white', 'red')
-		},
-		{ // DARK
-			one: colors.fg.red + colors.bg.black,
-			two: colors.fg.white + colors.bg.black,
-			bac: colors.fg.white + colors.bg.black,
-			tab: colors.fg.white + colors.bg.black,
-			cur: colors.fg.black + colors.bg.white,
-			tom: fullColor('white', 'red')
-		},
-		{ // ICE
-			one: colors.fg.black + colors.bg.cyan,
-			two: colors.fg.white + colors.bg.blue,
-			bac: colors.fg.black + colors.bg.white,
-			tab: colors.fg.white + colors.bg.black,
-			cur: colors.fg.black + colors.bg.white,
-			tom: fullColor('black', 'cyan')
-		},
-	];
-
-	this.drawPreview = function(code) {
-		let one = themes[code[0]].one; // Card color one
-		let two = themes[code[0]].two; // Card color two
-		let bac = themes[code[0]].bac; // Back of card color
-		let tab = themes[code[0]].tab; // Table color
-		let cur = themes[code[0]].cur; // Cursor color
-		let tom = themes[code[0]].tom; // To Mode color
-		
-		let preview = [
-			one + ' ' + two + '│            │' + tab + '              ░░░░░░░░░░░░░░    ░░░░░░░░░░░░░░    ' + one + '│      ',
-			one + ' ' + two + '│          J │' + tab + '              ░░░░░░░░░░░░░░    ░░░░░░░░░░░░░░    ' + one + '│      ',
-			one + '─' + two + '└────────────┘' + tab + '              ░░░░░░░░░░░░░░    ░░░░░░░░░░░░░░    ' + one + '└──────',
-			tab + '                                                                        ',
-			tab + '                                                                        ',
-			tab + 'E 2        ' + cur + '    PILE 3    ' + tab + '        PILE 4        ' + tom + '    PILE 5    ' + tab + '        PIL',
-			tab + '                                                                        ',
-			two + '──────┐' + tab + '    ' + bac + '┌────────────┐' + tab + '    ' + one + '┌────────────┐' + tab + '    ' + bac + '┌────────────┐' + tab + '    ' + bac + '┌──────',
-			two + '      │' + tab + '    ' + bac + '│. . . . . . │' + tab + '    ' + one + '│ K          │' + tab + '    ' + bac + '│. . . . . . │' + tab + '    ' + bac + '│. . . ',
-			one + '──────┐' + tab + '    ' + bac + '┌────────────┐' + tab + '    ' + two + '┌────────────┐' + tab + '    ' + bac + '┌────────────┐' + tab + '    ' + bac + '┌──────',
-			one + '      │' + tab + '    ' + bac + '│. . . . . . │' + tab + '    ' + two + '│ Q          │' + tab + '    ' + bac + '│. . . . . . │' + tab + '    ' + bac + '│. . . ',
-			one + ' _    │' + tab + '    ' + two + '┌────────────┐' + tab + '    ' + one + '┌────────────┐' + tab + '    ' + bac + '┌────────────┐' + tab + '    ' + bac + '┌──────',
-			one + '/ \\   │' + tab + '    ' + two + '│ J          │' + tab + '    ' + one + '│ J          │' + tab + '    ' + bac + '│. . . . . . │' + tab + '    ' + bac + '│. . . ',
-			one + '  /   │' + tab + '    ' + one + '┌────────────┐' + tab + '    ' + two + '┌────────────┐' + tab + '    ' + one + '┌────────────┐' + tab + '    ' + bac + '┌──────',
-			one + ' /    │' + tab + '    ' + one + '│ 10         │' + tab + '    ' + two + '│ 10         │' + tab + '    ' + one + '│ 8          │' + tab + '    ' + bac + '│. . . ',
-			one + '/     │' + tab + '    ' + two + '┌────────────┐' + tab + '    ' + two + '│     /\\     │' + tab + '    ' + two + '┌────────────┐' + tab + '    ' + two + '┌──────',
-			one + '      │' + tab + '    ' + two + '│ 9          │' + tab + '    ' + two + '│    /  \\    │' + tab + '    ' + two + '│ 7          │' + tab + '    ' + two + '│ 6    '
-		];
-		let noLabel = tab + '           ' + cur + '              ' + tab + '                      ' + tom + '              ' + tab + '           ';
-
-		for (let i = 0; i < preview.length; i++) {
-			stdout.cursorTo(settingsX, topY + 11 + i);
-			if (i == 5 && code[1] == 1) {
-				stdout.write(noLabel);
-			} else stdout.write(preview[i]);
-		}
-		setColor('white', 'black');
-		this.drawSquare(settingsX - 1, topY + 10, 74, preview.length + 2, false);
 	}
 }
 

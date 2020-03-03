@@ -1,6 +1,9 @@
 const game = new (require('./js/game.js'));
 const display = new (require('./js/display.js'));
+	const DisplaySettings = require('./js/display_settings.js');
+	display.settings = new DisplaySettings(display);
 const controller = new (require('./js/controller.js'));
+	controller.settings = new (require('./js/controller_settings.js'));
 const fs = require('fs');
 
 
@@ -214,6 +217,12 @@ function updatePause() {
 
 ///// SETTINGS /////
 
+//Temporary
+let jsonSettings = {
+	theme: 'ice',
+	label: false,
+	draw: 3
+};
 const allSettings = {
 	theme: ['normal', 'light', 'dark', 'ice'],
 	label: [true, false],
@@ -224,12 +233,6 @@ const settingCounts = []; // [4, 2, 2]
 for (let k of Object.keys(allSettings))
 	controller.settings.counts.push(allSettings[k].length);
 
-//Temporary
-let jsonSettings = {
-	theme: 'ice',
-	label: false,
-	draw: 3
-};
 function genControllerSettingsCode(settings) {
 	let code = [];
 	for (let k of Object.keys(settings))
@@ -243,10 +246,15 @@ function updateSettings() {
 	if (controller.settings.exit) {
 		switchTo('menu');
 		jsonSettings = controller.settings.exportChanges(allSettings);
+		applySettings(jsonSettings);
 		return;
 	}
-	if (changed) display.drawPreview(controller.settings.code);
-	display.updateSettings(controller.settings.buffer, controller.settings.code);
+	if (changed) display.settings.drawPreview(controller.settings.code);
+	display.settings.drawDynamic(controller.settings.buffer, controller.settings.code);
+}
+
+function applySettings(settings) {
+	game.drawAmount = settings.draw;
 }
 
 ///// WIN SCREEN /////
@@ -291,12 +299,16 @@ function startScreen(name) {
 		display.drawGameBoard(game);
 		display.drawController(controller);
 	} else if (name == 'settings') {
-		display.drawSettings();
-		display.updateSettings(controller.settings.buffer, controller.settings.code);
-		display.drawPreview(controller.settings.code);
+		display.settings.drawStatic();
+		display.settings.drawDynamic(controller.settings.buffer, controller.settings.code);
+		display.settings.drawPreview(controller.settings.code);
+		//display.drawSettings();
+		//display.updateSettings(controller.settings.buffer, controller.settings.code);
+		//display.drawPreview(controller.settings.code);
 	}
 }
 
+applySettings(jsonSettings);
 game.buildDeck();
 display.init();
 display.drawMainMenu(controller.menuOption);
@@ -323,3 +335,12 @@ process.stdin.on("keypress", function(ch, k) {
 	//display.debug(game);
 	//display.debugController(game, controller, history);
 });
+
+let rows = process.stdout.rows;
+let columns = process.stdout.columns;
+setInterval(() => {
+	if (rows != process.stdout.rows || columns != process.stdout.columns) {
+		rows = process.stdout.rows;
+		columns = process.stdout.columns;
+	}
+}, 20);
