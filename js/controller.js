@@ -217,8 +217,8 @@ const Controller = function() {
 		return this.gameData.piles[index].length - this.pileData[index] + faceUpDepth;
 	}
 
-	this.handleSettings = function(counts) {
-		this.settings.handleBuffer(this, counts);
+	this.handleSettings = function() {
+		return this.settings.handleBuffer(this);
 	}
 }
 

@@ -8,7 +8,7 @@ const fs = require('fs');
 
 function updateMenu() {
 	controller.handleMenu();
-	display.drawMainMenu(controller.menuOption);
+	display.drawMainMenu(controller.menuOption, jsonSettings);
 	if (controller.submit) {
 		if (controller.menuOption == 0)
 			switchTo('game');
@@ -222,13 +222,13 @@ const allSettings = {
 
 const settingCounts = []; // [4, 2, 2]
 for (let k of Object.keys(allSettings))
-	settingCounts.push(allSettings[k].length);
+	controller.settings.counts.push(allSettings[k].length);
 
 //Temporary
 let jsonSettings = {
-	theme: 'normal',
+	theme: 'ice',
 	label: false,
-	draw: 1
+	draw: 3
 };
 function genControllerSettingsCode(settings) {
 	let code = [];
@@ -239,10 +239,13 @@ function genControllerSettingsCode(settings) {
 controller.settings.code = genControllerSettingsCode(jsonSettings);
 
 function updateSettings() {
-	controller.handleSettings(settingCounts);
-	if (controller.quit) {
-		process.exit();
+	let changed = controller.handleSettings();
+	if (controller.settings.exit) {
+		switchTo('menu');
+		jsonSettings = controller.settings.exportChanges(allSettings);
+		return;
 	}
+	if (changed) display.drawPreview(controller.settings.code);
 	display.updateSettings(controller.settings.buffer, controller.settings.code);
 }
 
@@ -254,12 +257,6 @@ function updateEnd() {
 }
 
 
-
-game.buildDeck();
-display.init();
-display.drawMainMenu(controller.menuOption);
-//display.debug(game);
-//display.debugController(game, controller, history);
 
 let screenUpdates = {
 	menu: updateMenu,
@@ -282,6 +279,7 @@ function switchTo(name) {
 function clearScreen(name) {
 	if (name == 'menu') display.init();
 	else if (name == 'game') display.clearGameBoard();
+	else if (name == 'settings') display.init();
 }
 
 function startScreen(name) {
@@ -295,9 +293,15 @@ function startScreen(name) {
 	} else if (name == 'settings') {
 		display.drawSettings();
 		display.updateSettings(controller.settings.buffer, controller.settings.code);
-		display.drawPreview(jsonSettings);
+		display.drawPreview(controller.settings.code);
 	}
 }
+
+game.buildDeck();
+display.init();
+display.drawMainMenu(controller.menuOption);
+//display.debug(game);
+//display.debugController(game, controller, history);
 
 let keypress = require("keypress");
 keypress(process.stdin);

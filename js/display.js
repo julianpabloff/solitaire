@@ -1,5 +1,7 @@
 const Display = function() {
 
+	this.settings = new (require('./display_settings.js'));
+
 	let stdout = process.stdout;
 
 	this.clear = () => stdout.write('\x1b[2J');
@@ -101,7 +103,6 @@ const Display = function() {
 		'0011111111100111111111001111111100111111110000011000001100000110011111111001100000110011111111100',
 		'                                                                                                 ',
 	];
-	const options = ['  NEW GAME  ', '  CONTINUE  ', '  SETTINGS  ', '    QUIT    '];
 	const pauseOptions = ['   RESUME   ', '  SETTINGS  ', ' SAVE && QUIT '];
 
 	const centerString = function(string) { return Math.floor(columns/2) - Math.floor(string.length/2) }
@@ -132,6 +133,8 @@ const Display = function() {
 	this.drawMainMenu = function(selectedIndex) {
 		let x = centerString(logo[0]);
 		let y = Math.floor(rows * 0.35);
+		const options = ['  NEW GAME  ', '  CONTINUE  ', '  SETTINGS  ', '    QUIT    '];
+
 		setFg('white'); setBg('black');
 		this.drawSquare(x-1, y-1, logo[0].length + 2, logo.length + 2, false);
 		for (let i = 0; i < logo.length; i++) {
@@ -503,39 +506,50 @@ const Display = function() {
 			stdout.cursorTo(settingsX, topY + i);
 			stdout.write(settingsLogo[i]);
 		}
+		stdout.cursorTo(settingsX, topY + 29);
+		stdout.write('press esc when done');
 	}
 	this.updateSettings = function(buffer, code) {
-		let items = [' THEME        ', ' LABELS       ', ' DIFFICULTY   '];
+		let items = ['THEME', 'LABELS', 'DIFFICULTY'];
 		let options = [
-			[' NORMAL       ', ' LIGHT        ', ' DARK         ', ' ICE          '],
-			[' ENABLED      ', ' DISABLED     '],
-			[' DRAW 1       ', ' DRAW 3       ']
+			['NORMAL', 'LIGHT', 'DARK', 'ICE'],
+			['ENABLED', 'DISABLED'],
+			['DRAW 1', 'DRAW 3']
 		];
 
 		setColor('white', 'black');
-		this.drawSquare(settingsX - 1, topY + 4, 16, 5, false);
+		this.drawSquare(settingsX - 1, topY + 4, 23, 5, false);
 		for (let i = 0; i < items.length; i++) {
 			stdout.cursorTo(settingsX, topY + 5 + i);
 			if (i == buffer[0]) setColor('black', 'white');
 			else setColor('white', 'black');
-			stdout.write(items[i]);
+			let output = options[i][code[i]];
+			stdout.write(' ' + items[i] + ' - ' + output);
+			let spaceAmount = 20 - (items[i].length + 3 + output.length);
+			for (let j = 0; j < spaceAmount; j++)
+				stdout.write(' ');
 		}
 		if (buffer.length == 1) {
 			setColor('black', 'black');
-			this.drawSquare(settingsX + 16, topY + 4, 16, 6, true);
+			this.drawSquare(settingsX + 23, topY + 4, 16, 6, true);
 		}
 		if (buffer.length == 2) {
 			setColor('white', 'black');
-			this.drawSquare(settingsX + 16, topY + 4, 16, 2 + options[buffer[0]].length, false);
+			this.drawSquare(settingsX + 23, topY + 4, 16, 2 + options[buffer[0]].length, false);
 			for (let i = 0; i < options[buffer[0]].length; i++) {
-				stdout.cursorTo(settingsX + 17, topY + 5 + i);
+				stdout.cursorTo(settingsX + 24, topY + 5 + i);
 				if (i == buffer[1]) setColor('black', 'white');
 				else setColor('white', 'black');
-				stdout.write(options[buffer[0]][i]);
+				let output = options[buffer[0]][i];
+				stdout.write(' ' + output);
+				let spaceAmount = 13 - output.length;
+				for (let j = 0; j < spaceAmount; j++)
+					stdout.write(' ');
 			}
 		}
 
 		//DEBUG
+		/*
 		setColor('white', 'black');
 		stdout.cursorTo(settingsX, topY + 30);
 		stdout.write('buffer:          ');
@@ -543,10 +557,11 @@ const Display = function() {
 		console.log(buffer);
 		stdout.cursorTo(settingsX, topY + 32);
 		console.log(code);
+		*/
 	}
 
-	this.themes = {
-		normal: {
+	const themes = [
+		{ // NORMAL
 			one: fullColor('white', 'red'),
 			two: fullColor('white', 'black'),
 			bac: fullColor('black', 'white'),
@@ -554,7 +569,7 @@ const Display = function() {
 			cur: fullColor('black', 'white'),
 			tom: fullColor('white', 'black')
 		},
-		light: {
+		{ // LIGHT
 			one: fullColor('red', 'white'),
 			two: fullColor('black', 'white'),
 			bac: colors.fg.black + colors.bg.white,
@@ -562,7 +577,7 @@ const Display = function() {
 			cur: colors.fg.white + colors.bg.black,
 			tom: fullColor('white', 'red')
 		},
-		dark: {
+		{ // DARK
 			one: colors.fg.red + colors.bg.black,
 			two: colors.fg.white + colors.bg.black,
 			bac: colors.fg.white + colors.bg.black,
@@ -570,7 +585,7 @@ const Display = function() {
 			cur: colors.fg.black + colors.bg.white,
 			tom: fullColor('white', 'red')
 		},
-		ice: {
+		{ // ICE
 			one: colors.fg.black + colors.bg.cyan,
 			two: colors.fg.white + colors.bg.blue,
 			bac: colors.fg.black + colors.bg.white,
@@ -578,15 +593,15 @@ const Display = function() {
 			cur: colors.fg.black + colors.bg.white,
 			tom: fullColor('black', 'cyan')
 		},
-	}
+	];
 
-	this.drawPreview = function(settings) {
-		let one = this.themes[settings.theme].one; // Card color one
-		let two = this.themes[settings.theme].two; // Card color two
-		let bac = this.themes[settings.theme].bac; // Back of card color
-		let tab = this.themes[settings.theme].tab; // Table color
-		let cur = this.themes[settings.theme].cur; // Cursor color
-		let tom = this.themes[settings.theme].tom; // To Mode color
+	this.drawPreview = function(code) {
+		let one = themes[code[0]].one; // Card color one
+		let two = themes[code[0]].two; // Card color two
+		let bac = themes[code[0]].bac; // Back of card color
+		let tab = themes[code[0]].tab; // Table color
+		let cur = themes[code[0]].cur; // Cursor color
+		let tom = themes[code[0]].tom; // To Mode color
 		
 		let preview = [
 			one + ' ' + two + '│            │' + tab + '              ░░░░░░░░░░░░░░    ░░░░░░░░░░░░░░    ' + one + '│      ',
@@ -611,15 +626,13 @@ const Display = function() {
 
 		for (let i = 0; i < preview.length; i++) {
 			stdout.cursorTo(settingsX, topY + 11 + i);
-			if (i == 5 && !settings.label) {
+			if (i == 5 && code[1] == 1) {
 				stdout.write(noLabel);
 			} else stdout.write(preview[i]);
 		}
 		setColor('white', 'black');
 		this.drawSquare(settingsX - 1, topY + 10, 74, preview.length + 2, false);
 	}
-
-
 }
 
 module.exports = Display;
