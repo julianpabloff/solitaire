@@ -1,25 +1,33 @@
 const Display = function() {
 
 	let stdout = process.stdout;
+	this.draw = function(string, x, y) {
+		stdout.cursorTo(x, y);
+		stdout.write(string);
+	}
 
 	this.clear = () => stdout.write('\x1b[2J');
 	this.init = function() {
 		this.clear();
-		stdout.cursorTo(0,0);
-		this.drawBackground('green');
+		//this.drawBackground('black');
+		//stdout.cursorTo(0,0);
+		//console.log(this.bleh);
+		this.setColour('tab');
+		this.fillScreen();
 		stdout.write('\x1b[?25l');
 	}
 
 	this.setSize = function() {
-		rows = stdout.rows;
-		columns = stdout.columns;
+		this.rows = stdout.rows;
+		this.columns = stdout.columns;
+		//this.columns = 120;
 
-		cardX = Math.floor((columns - (cardWidth + margin) * 7 + margin) / 2);
-		cardY = Math.floor((rows - cardHeight) / 2);
+		cardX = Math.floor((this.columns - (cardWidth + margin) * 7 + margin) / 2);
+		cardY = Math.floor((this.rows - cardHeight) / 2);
 		// cardY = 40;
 
 		// Settings
-		settingsX = Math.floor(columns / 2 - 36);
+		settingsX = Math.floor(this.columns / 2 - 36);
 
 		// Game related
 		topY = cardY - cardHeight - margin;
@@ -31,7 +39,7 @@ const Display = function() {
 	}
 
 	let cardWidth = 14; let cardHeight = 10; let margin = 4;
-	let rows, columns, cardX, cardY;
+	let cardX, cardY;
 	let wastePos, stockPos, foundationPos;
 	let settingsX;
 	this.setSize();
@@ -64,14 +72,39 @@ const Display = function() {
 	this.setColor = function(fg, bg) {
 		this.setFg(fg); this.setBg(bg);
 	}
-	this.drawBackground = function(color) {
-		stdout.write(colors.bg[color]);
-		for (let r = 0; r < rows; r++) {
-			for (let c = 0; c < columns; c++) {
+	this.writeColor = function(colorCode) {
+		stdout.write(colorCode);
+	}
+	this.fillScreen = function() {
+		stdout.cursorTo(0,0);
+		for (let r = 0; r < this.rows; r++) {
+			for (let c = 0; c < this.columns; c++) {
 				stdout.write(' ');
 			}
 		}
-		stdout.write(colors.fg.black);
+	}
+	this.drawBackground = function(color) {
+		this.setBg(color);
+		stdout.cursorTo(0,0);
+		for (let r = 0; r < this.rows; r++) {
+			for (let c = 0; c < this.columns; c++) {
+				stdout.write(' ');
+			}
+		}
+	}
+	
+	this.themes = require('../../json/newThemes.json');
+	this.setTheme = function(name) {
+		for (let t of Object.keys(this.themes)) {
+			if (name == this.themes[t].title) {
+				this.theme = this.themes[t];
+				break;
+			}
+		}
+	}
+	this.setColour = function(attribute) {
+		this.setFg(this.theme[attribute].fg);
+		this.setBg(this.theme[attribute].bg);
 	}
 
 	const suits = ['h', 'c', 'd', 's'];
@@ -86,81 +119,40 @@ const Display = function() {
 		'j' : ['  ____  ', ' /\\  _\\ ', '/ 0  0 \\', '\\ \\__/ /', ' \\____/ '],
 	}
 	const cardSuitChars = {'h': '♥', 'c': '♣', 'd': '♦', 's': '♠'};
-	const logo = [
-		'                                                                                                 ',
-		'  █████████  █████████  ██        ████████  ████████  █████████  ████████  █████████  █████████  ',
-		'  ██         ██     ██  ██           ██        ██     ██     ██     ██     ██     ██  ██         ',
-		'  █████████  ██     ██  ██           ██        ██     █████████     ██     █████████  ████████   ',
-		'         ██  ██     ██  ██           ██        ██     ██     ██     ██     ██    ██   ██         ',
-		'  █████████  █████████  ████████  ████████     ██     ██     ██  ████████  ██     ██  █████████  ',
-		'                                                                                                 ',
-	];
-	const logoTwo = [
-		'                                                                                                 ',
-		'0011111111100111111111001100000000111111110011111111001111111110011111111001111111110011111111100',
-		'0011000000000110000011001100000000000110000000011000001100000110000011000001100000110011000000000',
-		'0011111111100110000011001100000000000110000000011000001111111110000011000001111111110011111111000',
-		'0000000001100110000011001100000000000110000000011000001100000110000011000001100001100011000000000',
-		'0011111111100111111111001111111100111111110000011000001100000110011111111001100000110011111111100',
-		'                                                                                                 ',
-	];
 	const pauseOptions = ['   RESUME   ', '  SETTINGS  ', ' SAVE && QUIT '];
 
-	const centerString = function(string) { return Math.floor(columns/2) - Math.floor(string.length/2) }
-
-	this.drawSquare = function(x, y, width, height, fill) {
-		stdout.cursorTo(x, y);
-		stdout.write('┌');
-		for (let i = 0; i < width - 2; i++) {
-			stdout.write('─');
-		}
-		stdout.write('┐');
-		for (let i = 0; i < height - 2; i++) {
-			stdout.cursorTo(x, y + 1 + i);
-			stdout.write('│');
-			if (fill) for (let j = 0; j < width - 2; j++)
-				stdout.write(' ');
-			stdout.cursorTo(x + width - 1, y + 1 + i);
-			stdout.write('│');
-		}
-		stdout.cursorTo(x, y + height - 1);
-		stdout.write('└');
-		for (let i = 0; i < width - 2; i++) {
-			stdout.write('─');
-		}
-		stdout.write('┘');
+	this.centerString = function(string) {
+		return Math.floor(this.columns/2 - string.length/2);
+	}
+	this.centerWidth = function(width) {
+		return Math.floor(this.columns/2 - width/2);
+	}
+	this.centerHeight = function(height) {
+		return Math.floor(this.rows/2 - height/2);
 	}
 
-	this.drawMainMenu = function(selectedIndex) {
-		let x = centerString(logo[0]);
-		let y = Math.floor(rows * 0.35);
-		const options = ['  NEW GAME  ', '  CONTINUE  ', '  SETTINGS  ', '    QUIT    '];
+	const squareElements = {
+		none: {tl: ' ', tr: ' ', bl: ' ', br: ' ', h: ' ', v: ' '},
+		thin: {tl: '┌', tr: '┐', bl: '└', br: '┘', h: '─', v: '│'},
+		thick: {tl: '┌', tr: '┐', bl: '└', br: '┘', h: '─', v: '│'}
+	};
 
-		this.setColor('white', 'black');;
-		this.drawSquare(x-1, y-1, logo[0].length + 2, logo.length + 2, false);
-		for (let i = 0; i < logo.length; i++) {
-			stdout.cursorTo(x, y + i);
-			stdout.write(logo[i]);
-		}
-		let optionsY = y + logo.length + 4;
-		let boxWidth = 16;
-		let boxX = Math.floor(columns/2) - Math.floor(boxWidth/2);
+	this.drawSquare = function(x, y, width, height, fill, border = 'thin') {
+		let piece = squareElements[border];
+		this.draw(piece.tl + piece.h.repeat(width - 2) + piece.tr, x, y);
 
-		this.drawSquare(boxX, optionsY - 1, boxWidth, options.length + 5, true);
-		for (let i = 0; i < options.length; i++) {
-			stdout.cursorTo(centerString(options[i]), optionsY + 2 * i);
-			if (i == selectedIndex)
-				this.setColor('black', 'white');
-			else
-				this.setColor('white', 'black');
-			stdout.write(options[i]);
+		for (let i = 0; i < height - 2; i++) {
+			this.draw(piece.v, x, y + 1 + i);
+			if (fill) stdout.write(' '.repeat(width - 2));
+			this.draw(piece.v, x + width - 1, y + 1 + i);
 		}
+		this.draw(piece.bl + piece.h.repeat(width - 2) + piece.br, x, y + height - 1);
 	}
 
 	this.animateCards = function() {
 		setInterval(() => {
-			let x = Math.floor(Math.random() * columns);
-			let y = Math.floor(Math.random() * rows);
+			let x = Math.floor(Math.random() * this.columns);
+			let y = Math.floor(Math.random() * this.rows);
 			let suit = suits[Math.floor(Math.random() * suits.length)];
 			let value = Math.floor(Math.random() * 13) + 1;
 			let card = {suit: suit, value: value};
@@ -169,12 +161,7 @@ const Display = function() {
 	}
 
 	this.drawCardBox = function(x, y) {
-		for (let i = 0; i < 10; i++) {
-			stdout.cursorTo(x, y+i);
-			if (i == 0) stdout.write(cardBox[0]);
-			else if (i > 0 && i < 9) stdout.write(cardBox[1]);
-			else stdout.write(cardBox[2]);
-		}
+		this.drawSquare(x, y, 14, 10, true);
 	}
 
 	this.drawCard = function(card, x, y) {
@@ -186,10 +173,9 @@ const Display = function() {
 		let suit = card.suit;
 		let value = cardVals[card.value];
 
-		this.setFg('white');
-		if (suit == 'h' || suit == 'd') this.setBg('red');
-		else this.setBg('black');
-		this.drawCardBox(x, y);
+		if (suit == 'h' || suit == 'd') this.setColour('one');
+		else this.setColour('two');
+		this.drawSquare(x, y, 14, 10, true);
 		for (let i = 0; i <= 4; i++) {
 			stdout.cursorTo(x + 3, y + 2 + i);
 			stdout.write(cardSuits[suit][i]);
@@ -202,7 +188,7 @@ const Display = function() {
 	}
 
 	this.drawCardBack = function(x, y) {
-		this.setColor('black', 'white');
+		this.setColour('bac');
 		this.drawCardBox(x, y);
 		for (let i = 1; i < 9; i += 2) {
 			stdout.cursorTo(x + 1, y+i);
@@ -213,20 +199,21 @@ const Display = function() {
 	}
 
 	this.drawFoundationSpot = function(x, y) {
-		this.setColor('black', 'green');
+		this.setColour('tab');
 		for (let i = 0; i < 10; i++) {
 			stdout.cursorTo(x, y + i);
 			stdout.write('░░░░░░░░░░░░░░');
 		}
-		//stdout.write(colors.reset);
 	}
 
 	this.clearCard = function(x, y) {
-		this.setBg('green');
+		this.setColour('tab');
+		this.drawSquare(x, y, cardWidth, cardHeight, true, 'none');
+		/*
 		for (let i = 0; i < cardHeight; i++) {
 			stdout.cursorTo(x, y+i);
 			stdout.write('              ');
-		}
+		}*/
 	}
 
 	this.drawGameBoard = function(game) {
@@ -248,9 +235,9 @@ const Display = function() {
 
 	this.clearGameBoard = function() {
 		this.setBg('green');
-		for (let i = topY - 2; i < rows; i++) {
+		for (let i = topY - 2; i < this.rows; i++) {
 			stdout.cursorTo(0, i);
-			for (let j = 0; j < columns; j++) {
+			for (let j = 0; j < this.columns; j++) {
 				stdout.write(' ');
 			}
 		}
@@ -263,12 +250,12 @@ const Display = function() {
 	this.drawPauseMenu = function(selectedIndex) {
 		let width = 20;
 		let height = 7;
-		let x = Math.floor(columns / 2 - width / 2);
+		let x = Math.floor(this.columns / 2 - width / 2);
 		let y = cardY - 3;
 		this.setColor('white', 'black');
 		this.drawSquare(pauseX, pauseY, pauseWidth, pauseHeight, true);
 		for (let i = 0; i < pauseOptions.length; i++) {
-			stdout.cursorTo(centerString(pauseOptions[i]), y + 1 + i * 2);
+			stdout.cursorTo(this.centerString(pauseOptions[i]), y + 1 + i * 2);
 			if (i == selectedIndex)
 				this.setColor('black', 'white');
 			else
@@ -277,7 +264,7 @@ const Display = function() {
 		}
 	}
 	this.clearPauseMenu = function(pile) {
-		this.setColor('green', 'green');
+		this.setColour('tab');
 		this.drawSquare(pauseX, pauseY, pauseWidth, pauseHeight, true);
 		let x = findPileX(3);
 		for (let i = 0; i < pile.length; i++) {
@@ -331,7 +318,7 @@ const Display = function() {
 			}*/
 			let i = 0;
 			while (i < 10 + 2 * (Math.abs(diff) - 1)) {
-				this.setBg('green');
+				this.setColour('tab');
 				stdout.cursorTo(x, y + i);
 				stdout.write('              ');
 				i++;
@@ -350,26 +337,27 @@ const Display = function() {
 
 	this.drawController = function(controller) {
 		let buffer = controller.buffer;
+		let label = (controller.settings.code[1] == 0);
 
-		this.setColor('black', 'green');
+		this.setColour('tab');
+		let wasteX = cardX + cardWidth + margin + 4 * (this.wasteLength - 1)
+		if (label) this.draw('   TOP PILE   ', wasteX, topY - 2);
 		for (let i = 0; i < 7; i++) {
 			stdout.cursorTo(cardX + i * (cardWidth + margin), cardY - 2);
-			stdout.write(pileName(i)); // Enable to write the piles that the cursor isn't on
+			if (label) stdout.write(pileName(i)); // Enable to write the piles that the cursor isn't on
 			stdout.write('              ');
 		}
 		stdout.cursorTo(cardX + cardWidth + margin, topY - 2);
 		for (let i = 0; i < 22; i++) stdout.write(' ');
-		let wasteX = cardX + cardWidth + margin + 4 * (this.wasteLength - 1)
 
 		if (buffer.length == 1) {
+			this.setColour('cur');
 			if (buffer[0].type == 'pile') {
 				let index = buffer[0].index;
-				this.setBg('white');
 				stdout.cursorTo(cardX + index * (cardWidth + margin), cardY - 2);
 				stdout.write(pileName(index));
 			}
 			if (buffer[0].type == 'waste') {
-				this.setBg('white');
 				stdout.cursorTo(wasteX, topY - 2);
 				stdout.write('   TOP PILE   ');
 			}
@@ -382,18 +370,18 @@ const Display = function() {
 
 			if (controller.toMode) {
 				if (buffer[0].type == 'pile') {
-					this.setColor('white', 'black');
+					this.setColour('tom');
 					stdout.cursorTo(firstX, cardY - 2);
 					stdout.write(pileName(firstIndex));
 				}
 				if (buffer[0].type == 'waste') {
-					this.setColor('white', 'black');
+					this.setColour('tom');
 					stdout.cursorTo(wasteX, topY - 2);
 					stdout.write('   TOP PILE   ');
 				}
 				if (secondIndex != firstIndex || buffer[0].type == 'waste') {
 					stdout.cursorTo(secondX, cardY - 2);
-					this.setColor('black', 'white');
+					this.setColour('cur');
 					stdout.write(pileName(secondIndex));
 				}
 			}
@@ -405,21 +393,17 @@ const Display = function() {
 		stdout.cursorTo(cardX + cardWidth + margin, topY - 2)
 	}
 
-	this.resize = function() {
-		if (rows != stdout.rows || columns != stdout.columns) {
-			console.log('RESIZE');
-		}
-	}
-
 	this.exit = function() {
 		stdout.write('\x1b[?25h' + colors.reset);
 		stdout.cursorTo(0,0);
 		//this.clear();
 	}
 
+////DEBUG//////////////////////////////////////////////////////////////////////////
+
 	this.debug = function(game) {
 		for (let i = 0; i < 25; i++) {
-			for (let j = 0; j < columns; j++) {
+			for (let j = 0; j < this.columns; j++) {
 				stdout.cursorTo(j, i);
 				stdout.write(' ');
 			}
@@ -463,7 +447,7 @@ const Display = function() {
 	this.debugController = function(game, controller, history) {
 		stdout.write(colors.reset);
 		for (let i = 0; i < 23; i++) {
-			for (let j = 0; j < columns; j++) {
+			for (let j = 0; j < this.columns; j++) {
 				stdout.cursorTo(j, i);
 				stdout.write(' ');
 			}

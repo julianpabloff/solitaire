@@ -1,7 +1,11 @@
 const game = new (require('./js/game.js'));
-const display = new (require('./js/display.js'));
-	const DisplaySettings = require('./js/display_settings.js');
-	display.settings = new DisplaySettings(display);
+const display = new (require('./js/display/display.js'));
+	const MenuDisplay = require('./js/display/menu_display.js');
+	display.menu = new MenuDisplay(display);
+	const GameDisplay = require('./js/display/game_display.js');
+	display.game = new GameDisplay(display);
+	const SettingsDisplay = require('./js/display/settings_display.js');
+	display.settings = new SettingsDisplay(display);
 const controller = new (require('./js/controller.js'));
 	controller.settings = new (require('./js/controller_settings.js'));
 const fs = require('fs');
@@ -11,7 +15,8 @@ const fs = require('fs');
 
 function updateMenu() {
 	controller.handleMenu();
-	display.drawMainMenu(controller.menuOption, jsonSettings);
+	//display.drawMainMenu(controller.menuOption);
+	display.menu.drawDynamic(controller.menuOption);
 	if (controller.submit) {
 		if (controller.menuOption == 0)
 			switchTo('game');
@@ -219,7 +224,7 @@ function updatePause() {
 
 //Temporary
 let jsonSettings = {
-	theme: 'ice',
+	theme: 'dark',
 	label: false,
 	draw: 3
 };
@@ -244,9 +249,9 @@ controller.settings.code = genControllerSettingsCode(jsonSettings);
 function updateSettings() {
 	let changed = controller.handleSettings();
 	if (controller.settings.exit) {
-		switchTo('menu');
 		jsonSettings = controller.settings.exportChanges(allSettings);
 		applySettings(jsonSettings);
+		switchTo('menu');
 		return;
 	}
 	if (changed) display.settings.drawPreview(controller.settings.code);
@@ -255,6 +260,7 @@ function updateSettings() {
 
 function applySettings(settings) {
 	game.drawAmount = settings.draw;
+	display.setTheme(settings.theme);
 }
 
 ///// WIN SCREEN /////
@@ -285,33 +291,32 @@ function switchTo(name) {
 }
 
 function clearScreen(name) {
-	if (name == 'menu') display.init();
-	else if (name == 'game') display.clearGameBoard();
-	else if (name == 'settings') display.init();
+	if (name == 'menu') display.init(); //display.menu.clear();
+	else if (name == 'game') display.game.clear(game.piles);//display.init(); //display.clearGameBoard();
+	else if (name == 'settings') display.init(); //display.settings.clear();
 }
 
 function startScreen(name) {
 	if (name == 'menu') {
-		display.drawMainMenu(controller.menuOption);
+		display.menu.drawStatic();
+		display.menu.drawDynamic(controller.menuOption);
 	} else if (name == 'game') {
 		game.shuffle().restart();
 		controller.setBuffer();
-		display.drawGameBoard(game);
+		//display.drawGameBoard(game);
+		display.game.drawAll(game.piles);
 		display.drawController(controller);
 	} else if (name == 'settings') {
 		display.settings.drawStatic();
 		display.settings.drawDynamic(controller.settings.buffer, controller.settings.code);
 		display.settings.drawPreview(controller.settings.code);
-		//display.drawSettings();
-		//display.updateSettings(controller.settings.buffer, controller.settings.code);
-		//display.drawPreview(controller.settings.code);
 	}
 }
 
 applySettings(jsonSettings);
 game.buildDeck();
 display.init();
-display.drawMainMenu(controller.menuOption);
+startScreen('menu');
 //display.debug(game);
 //display.debugController(game, controller, history);
 

@@ -1,0 +1,38 @@
+[
+	{
+		"title" : "normal",
+		"one" : {"fg": "white", "bg": "red"},
+		"two" : {"fg": "white", "bg": "black"},
+		"bac" : {"fg": "black", "bg": "white"},
+		"tab" : {"fg": "black", "bg": "green"},
+		"cur" : {"fg": "black", "bg": "white"},
+		"tom" : {"fg": "white", "bg": "black"}
+	},
+	{
+		"title" : "light",
+		"one" : {"fg": "red",   "bg": "white"},
+		"two" : {"fg": "black", "bg": "white"},
+		"bac" : {"fg": "black", "bg": "white"},
+		"tab" : {"fg": "black", "bg": "white"},
+		"cur" : {"fg": "white", "bg": "black"},
+		"tom" : {"fg": "white", "bg": "red"}
+	},
+	{
+		"title" : "dark",
+		"one" : {"fg": "red", "bg": "black"},
+		"two" : {"fg": "white", "bg": "black"},
+		"bac" : {"fg": "white", "bg": "black"},
+		"tab" : {"fg": "white", "bg": "black"},
+		"cur" : {"fg": "black", "bg": "white"},
+		"tom" : {"fg": "black", "bg": "red"}
+	},
+	{
+		"title" : "ice",
+		"one" : {"fg": "black", "bg": "cyan"},
+		"two" : {"fg": "white", "bg": "blue"},
+		"bac" : {"fg": "black", "bg": "white"},
+		"tab" : {"fg": "white", "bg": "black"},
+		"cur" : {"fg": "black", "bg": "white"},
+		"tom" : {"fg": "white", "bg": "blue"}
+	}
+]

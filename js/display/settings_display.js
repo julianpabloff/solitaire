@@ -1,4 +1,4 @@
-const DisplaySettings = function(d) {
+const SettingsDisplay = function(d) {
 
 	let stdout = process.stdout;
 	let rows, columns;
@@ -19,8 +19,8 @@ const DisplaySettings = function(d) {
 	];
 
 	this.drawStatic = function() {
-		d.drawBackground('black');
-		d.setFg('white');
+		d.setColor('white', 'black');
+		d.drawSquare(x - 4, y - 2, 80, 34, true);
 		for (let i = 0; i < settingsLogo.length; i++) {
 			stdout.cursorTo(x, y + i);
 			stdout.write(settingsLogo[i]);
@@ -69,30 +69,14 @@ const DisplaySettings = function(d) {
 		}
 	}
 
-	this.encodeThemes = function(themes) {
-		for (let t in themes) {
-			for (let k of Object.keys(themes[t])) {
-				if (k != 'title') {
-					let color1 = themes[t][k][0];
-					let color2 = themes[t][k][1];
-					themes[t][k] = d.fullColor(color1, color2);
-				}
-			}
-		}
-		this.themes = themes;
-	}
-
-	const jsonThemes = require('../json/themes.json');
-	this.encodeThemes(jsonThemes);
-
 	this.drawPreview = function(code) {
-		let theme = this.themes[code[0]];
-		let one = theme.one; // Card color one
-		let two = theme.two; // Card color two
-		let bac = theme.bac; // Back of card color
-		let tab = theme.tab; // Table color
-		let cur = theme.cur; // Cursor color
-		let tom = theme.tom; // To Mode color
+		let theme = d.themes[code[0]];
+		let one = d.fullColor(theme.one.fg, theme.one.bg); // Card color one
+		let two = d.fullColor(theme.two.fg, theme.two.bg); // Card color two
+		let bac = d.fullColor(theme.bac.fg, theme.bac.bg); // Back of card color
+		let tab = d.fullColor(theme.tab.fg, theme.tab.bg); // Table color
+		let cur = d.fullColor(theme.cur.fg, theme.cur.bg); // Cursor color
+		let tom = d.fullColor(theme.tom.fg, theme.tom.bg); // To Mode color
 
 		let preview = [
 			one + ' ' + two + '│            │' + tab + '              ░░░░░░░░░░░░░░    ░░░░░░░░░░░░░░    ' + one + '│      ',
@@ -126,6 +110,11 @@ const DisplaySettings = function(d) {
 		d.drawSquare(x - 1, y + 10, 74, preview.length + 2, false);
 	}
 
+	this.clear = function() {
+		d.setColour('tab');
+		d.drawSquare(x - 4, y - 2, 80, 34, true);
+	}
+
 }
 
-module.exports = DisplaySettings;
+module.exports = SettingsDisplay;
