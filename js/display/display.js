@@ -94,6 +94,7 @@ const Display = function() {
 	}
 	
 	this.themes = require('../../json/newThemes.json');
+	this.menuScheme = {};
 	this.setTheme = function(name) {
 		for (let t of Object.keys(this.themes)) {
 			if (name == this.themes[t].title) {
@@ -101,6 +102,8 @@ const Display = function() {
 				break;
 			}
 		}
+		this.menuScheme.text = (this.theme.title == 'normal' || this.theme.title == 'light') ? 'two' : 'one';
+		this.menuScheme.cursor = (this.theme.title == 'dark') ? 'tom' : 'cur';
 	}
 	this.setColour = function(attribute) {
 		this.setFg(this.theme[attribute].fg);
@@ -209,13 +212,9 @@ const Display = function() {
 	this.clearCard = function(x, y) {
 		this.setColour('tab');
 		this.drawSquare(x, y, cardWidth, cardHeight, true, 'none');
-		/*
-		for (let i = 0; i < cardHeight; i++) {
-			stdout.cursorTo(x, y+i);
-			stdout.write('              ');
-		}*/
 	}
 
+	/*
 	this.drawGameBoard = function(game) {
 		let stock = game.stock; let waste = game.waste;
 		let piles = game.piles; let foundations = game.foundations;
@@ -241,7 +240,7 @@ const Display = function() {
 				stdout.write(' ');
 			}
 		}
-	}
+	}*/
 
 	const pauseWidth = 20;
 	const pauseHeight = 7;
@@ -265,7 +264,7 @@ const Display = function() {
 	}
 	this.clearPauseMenu = function(pile) {
 		this.setColour('tab');
-		this.drawSquare(pauseX, pauseY, pauseWidth, pauseHeight, true);
+		this.drawSquare(pauseX, pauseY, pauseWidth, pauseHeight, true, 'none');
 		let x = findPileX(3);
 		for (let i = 0; i < pile.length; i++) {
 			if (pile[i].faceUp) this.drawCard(pile[i], x, cardY + 2 * i);

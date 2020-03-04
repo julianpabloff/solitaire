@@ -44,25 +44,19 @@ function updateGame() {
 	if (controller.flip && !controller.toMode) {
 		game.flipDeck(true);
 		//history.push(game.getGameData());
+		
 		display.updateDeck(game.stock, game.waste);
 		let command = { type: 'flip' };
 		history.push(command);
 	}
 
 	if (controller.pause) {
-		display.drawPauseMenu(controller.pauseOption);
+		//display.drawPauseMenu(controller.pauseOption);
+		display.game.pause.drawStatic();
 		update = screenUpdates['pause'];
 		return;
 	}
 
-
-	//if (controller.quit) { display.exit(); process.exit(); }
-	/*
-	if (controller.quit) {
-		controller.toMode = false;
-		switchTo('menu');
-		return;
-	}*/
 
 	/* Disabling undo for now
 	if (controller.undo && history.length > 0) {
@@ -217,7 +211,7 @@ function updatePause() {
 		}
 		controller.resetPause();
 	}
-	else display.drawPauseMenu(controller.pauseOption);
+	else display.game.pause.drawDynamic(controller.pauseOption);
 }
 
 ///// SETTINGS /////
@@ -249,8 +243,11 @@ controller.settings.code = genControllerSettingsCode(jsonSettings);
 function updateSettings() {
 	let changed = controller.handleSettings();
 	if (controller.settings.exit) {
-		jsonSettings = controller.settings.exportChanges(allSettings);
-		applySettings(jsonSettings);
+		let newSettings = controller.settings.exportChanges(allSettings);
+		applySettings(newSettings);
+		if (newSettings.theme != jsonSettings.theme)
+			display.init();
+		jsonSettings = newSettings;
 		switchTo('menu');
 		return;
 	}
@@ -291,9 +288,9 @@ function switchTo(name) {
 }
 
 function clearScreen(name) {
-	if (name == 'menu') display.init(); //display.menu.clear();
+	if (name == 'menu') display.menu.clear();
 	else if (name == 'game') display.game.clear(game.piles);//display.init(); //display.clearGameBoard();
-	else if (name == 'settings') display.init(); //display.settings.clear();
+	else if (name == 'settings') display.settings.clear();
 }
 
 function startScreen(name) {

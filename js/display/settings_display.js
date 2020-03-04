@@ -19,14 +19,12 @@ const SettingsDisplay = function(d) {
 	];
 
 	this.drawStatic = function() {
-		d.setColor('white', 'black');
+		d.setColour(d.menuScheme.text);
 		d.drawSquare(x - 4, y - 2, 80, 34, true);
-		for (let i = 0; i < settingsLogo.length; i++) {
-			stdout.cursorTo(x, y + i);
-			stdout.write(settingsLogo[i]);
-		}
-		stdout.cursorTo(x, y + 29);
-		stdout.write('press esc when done');
+		for (let i = 0; i < settingsLogo.length; i++)
+			d.draw(settingsLogo[i], x, y + i);
+		d.drawSquare(x - 1, y + 4, 23, 5, false);
+		d.draw('press esc when done', x, y + 29);
 	}
 
 	this.drawDynamic = function(buffer, code) {
@@ -37,32 +35,31 @@ const SettingsDisplay = function(d) {
 			['DRAW 1', 'DRAW 3']
 		];
 
-		d.setColor('white', 'black');
-		d.drawSquare(x - 1, y + 4, 23, 5, false);
 		for (let i = 0; i < items.length; i++) {
-			stdout.cursorTo(x, y + 5 + i);
-			if (i == buffer[0]) d.setColor('black', 'white');
-			else d.setColor('white', 'black');
-			let output = options[i][code[i]];
-			stdout.write(' ' + items[i] + ' - ' + output);
-			let spaceAmount = 20 - (items[i].length + 3 + output.length);
-			for (let j = 0; j < spaceAmount; j++)
-				stdout.write(' ');
+			let width = 23;
+			if (i == buffer[0]) d.setColour(d.menuScheme.cursor);
+			else d.setColour(d.menuScheme.text);
+			let output = ' ' + items[i] + ' - ' + options[i][code[i]];
+			d.draw(output, x, y + 5 + i);
+			let spaceAmount = 23 - (2 + output.length);
+			if (spaceAmount > 0) stdout.write(' '.repeat(spaceAmount));
 		}
 		if (buffer.length == 1) {
-			d.setColor('black', 'black');
-			d.drawSquare(x + 23, y + 4, 16, 6, true);
+			d.setColour(d.menuScheme.text);
+			d.drawSquare(x + 23, y + 4, 16, 6, true, 'none');
 		}
 		if (buffer.length == 2) {
-			d.setColor('white', 'black');
-			d.drawSquare(x + 23, y + 4, 16, 2 + options[buffer[0]].length, false);
+			let width = 16;
+			d.setColour(d.menuScheme.text);
+			d.drawSquare(x + 23, y + 4, width, 2 + options[buffer[0]].length, false);
+
 			for (let i = 0; i < options[buffer[0]].length; i++) {
 				stdout.cursorTo(x + 24, y + 5 + i);
-				if (i == buffer[1]) d.setColor('black', 'white');
-				else d.setColor('white', 'black');
+				if (i == buffer[1]) d.setColour(d.menuScheme.cursor);
+				else d.setColour(d.menuScheme.text);
 				let output = options[buffer[0]][i];
 				stdout.write(' ' + output);
-				let spaceAmount = 13 - output.length;
+				let spaceAmount = width - 3 - output.length;
 				for (let j = 0; j < spaceAmount; j++)
 					stdout.write(' ');
 			}
@@ -106,13 +103,13 @@ const SettingsDisplay = function(d) {
 				stdout.write(noLabel);
 			else stdout.write(preview[i]);
 		}
-		d.setColor('white', 'black');
+		d.setColour(d.menuScheme.text);
 		d.drawSquare(x - 1, y + 10, 74, preview.length + 2, false);
 	}
 
 	this.clear = function() {
 		d.setColour('tab');
-		d.drawSquare(x - 4, y - 2, 80, 34, true);
+		d.drawSquare(x - 4, y - 2, 80, 34, true, 'none');
 	}
 
 }

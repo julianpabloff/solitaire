@@ -34,8 +34,7 @@ const MenuDisplay = function(d) {
 
 	let colorscheme;
 	this.drawStatic = function() {
-		colorscheme = (d.theme.title == 'normal' || d.theme.title == 'light') ? 'two' : 'one';
-		d.setColour(colorscheme);
+		d.setColour(d.menuScheme.text);
 		d.drawSquare(logo.x, logo.y, logo.w, logo.h, false);
 		for (let i = 0; i < 2; i++)
 			d.draw(' '.repeat(logo.w - 2), logo.x + 1, logo.y + 1 + 6 * i);
@@ -48,8 +47,8 @@ const MenuDisplay = function(d) {
 	this.drawDynamic = function(selectedIndex) {
 		for (let i = 0; i < optionText.length; i++) {
 			if (i == 1 && !this.drawContinueBtn) continue;
-			if (i == selectedIndex) d.setColour('cur');
-			else d.setColour(colorscheme);
+			if (i == selectedIndex) d.setColour(d.menuScheme.cursor);
+			else d.setColour(d.menuScheme.text);
 			let spacing = (options.w - optionText[i].length - 2) / 2;
 			let output = ' '.repeat(spacing) + optionText[i] + ' '.repeat(spacing);
 			d.draw(output, options.x + 1, options.y + 1 + 2 * i);
@@ -57,9 +56,9 @@ const MenuDisplay = function(d) {
 	}
 
 	this.clear = function() {
-		d.setColor('green', 'green');
-		d.drawSquare(logo.x, logo.y, logo.w, logo.h, true);
-		d.drawSquare(options.x, options.y, options.w, options.h, true);
+		d.setColour('tab');
+		d.drawSquare(logo.x, logo.y, logo.w, logo.h, true, 'none');
+		d.drawSquare(options.x, options.y, options.w, options.h, true, 'none');
 	}
 }
 
