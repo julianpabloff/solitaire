@@ -168,16 +168,18 @@ const Display = function() {
 	}
 
 	this.drawCard = function(card, x, y) {
-		if (!card.faceUp) {
-			this.clearCard(x,y);
-			this.drawCardBox(x,y);
-			return;
-		}
 		let suit = card.suit;
 		let value = cardVals[card.value];
 
 		if (suit == 'h' || suit == 'd') this.setColour('one');
 		else this.setColour('two');
+
+		if (!card.faceUp) {
+			this.clearCard(x,y);
+			this.drawCardBox(x,y);
+			return;
+		} // Just in case you draw a card that's supposed to be face down
+
 		this.drawSquare(x, y, 14, 10, true);
 		for (let i = 0; i <= 4; i++) {
 			stdout.cursorTo(x + 3, y + 2 + i);
@@ -188,6 +190,23 @@ const Display = function() {
 		stdout.write(value.toString() + ' '); //+ cardSuitChars[suit] + ' ');
 		stdout.cursorTo(x + 11 - value.length, y + 8);
 		stdout.write(' ' + value);
+	}
+
+	this.drawCardSide = function(card, x, y) {
+		let suit = card.suit;
+		let value = cardVals[card.value].toString();
+		
+		if (suit == 'h' || suit == 'd') this.setColour('one');
+		else this.setColour('two');
+
+		this.draw('┌' + '─'.repeat(3), x, y);
+		this.draw('│   ', x, y + 1);
+		this.draw(value, x + 2, y + 1);
+		for (let i = 0; i < 5; i++)
+			this.draw('│  ' + cardSuits[suit][i][0], x, y + 2 + i);
+		for (let i = 0; i < 2; i++)
+			this.draw('│   ', x, y + 7 + i);
+		this.draw('└' + '─'.repeat(3), x, y + 9);
 	}
 
 	this.drawCardBack = function(x, y) {

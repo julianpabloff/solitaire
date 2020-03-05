@@ -6,6 +6,7 @@ const GameDisplay = function(d) {
 	const cardWidth = 14;
 	const cardHeight = 10;
 	const margin = 4;
+	const totalWidth = 122;
 
 	const findPileX = (index) => { return cardX + (cardWidth + margin) * index; }
 
@@ -44,9 +45,11 @@ const GameDisplay = function(d) {
 	let wasteLength = 0; // Might be a problem when starting program and playing from a save
 	this.drawWaste = function(waste) {
 		let cardSet = [];
-		if (waste.length != 0) {
-			let clearWidth = 4 * wasteLength - 1;
-			d.drawSquare(wasteX, topY, 8, cardHeight, true, 'none');
+		if (waste.length == 0) {
+			d.setColour('tab');
+			let clearWidth = cardWidth + 4 * (wasteLength - 1);
+			d.drawSquare(wasteX, topY, clearWidth, cardHeight, true, 'none');
+		} else {
 			let i = 0;
 			while (i < 3 && i < waste.length) {
 				cardSet.unshift(waste[waste.length - 1 - i]);
@@ -55,7 +58,8 @@ const GameDisplay = function(d) {
 			wasteLength = i;
 		}
 		for (let c = 0; c < cardSet.length; c++)
-			d.drawCard(cardSet[c], wasteX + c * 4, topY);
+			if (c < cardSet.length - 1) d.drawCardSide(cardSet[c], wasteX + c * 4, topY);
+			else d.drawCard(cardSet[c], wasteX + c * 4, topY);
 	}
 
 	this.clear = function(piles) {
@@ -63,6 +67,7 @@ const GameDisplay = function(d) {
 		d.drawSquare(wasteX, topY, 22, cardHeight, true, 'none');
 		for (let f = 0; f < 4; f++)
 			d.clearCard(foundationX[f], topY);
+		d.draw(' '.repeat(totalWidth), cardX, cardY - 2);
 		for (let p = 0; p < piles.length; p++) {
 			let length = piles[p].length;
 			if (length == 0) continue;

@@ -45,7 +45,8 @@ function updateGame() {
 		game.flipDeck(true);
 		//history.push(game.getGameData());
 		
-		display.updateDeck(game.stock, game.waste);
+		//display.updateDeck(game.stock, game.waste);
+		display.game.drawWaste(game.waste);
 		let command = { type: 'flip' };
 		history.push(command);
 	}
