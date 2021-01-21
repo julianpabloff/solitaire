@@ -1,4 +1,4 @@
-const ControllerSettings = function() {
+const SettingsController = function() {
 	this.buffer = [0];
 	this.counts = [];
 	// this.code = [];
@@ -48,4 +48,4 @@ const ControllerSettings = function() {
 	}
 }
 
-module.exports = ControllerSettings;
+module.exports = SettingsController;

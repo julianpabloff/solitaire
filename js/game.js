@@ -38,11 +38,6 @@ const Game = function() {
 	}
 
 	this.restart = function() {
-		//for (let p in this.piles) this.piles.pop();
-		//for (let s in this.stock) this.stock.pop();
-		//for (let w in this.waste) this.waste.pop();
-		//for (let f in this.foundations) this.foundations.pop();
-		// I guess only the literal work?
 		this.piles = [];
 		this.stock = [];
 		this.waste = [];

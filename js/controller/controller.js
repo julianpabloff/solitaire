@@ -65,7 +65,7 @@ const Controller = function() {
 			if (this.menuOption == 3) this.menuOption = 0;
 			else this.menuOption++;
 		}
-		if (this.jumpTo !== null && (this.jumpTo >= 1 || this.jumpTo <= 4))
+		if (this.jumpTo !== null && (this.jumpTo > -1 && this.jumpTo < 4))
 			this.menuOption = this.jumpTo;
 	}
 
@@ -78,18 +78,20 @@ const Controller = function() {
 		if (this.esc || this.submit && this.pauseOption == 0)
 			this.resetPause();
 		else if (this.up) {
-			if (this.pauseOption == 0) this.pauseOption = 2;
-			else this.pauseOption--;
+			let index = Math.abs((this.pauseOption - 1) % 2);
+			this.pauseOption = index;
 		}
 		else if (this.down) {
-			if (this.pauseOption == 2) this.pauseOption = 0;
-			else this.pauseOption++;
+			let index = (this.pauseOption + 1) % 2;
+			this.pauseOption = index;
 		}
 	}
 
+	let pileIndex = 4;
 	this.handleBuffer = function() {
 		let first = this.buffer[0];
 		let second = this.buffer[1];
+		let clear
 
 		/*
 		let last = this.buffer[this.buffer.length - 1];

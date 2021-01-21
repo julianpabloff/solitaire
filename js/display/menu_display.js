@@ -31,7 +31,6 @@ const MenuDisplay = function(d) {
 	let options;
 	this.setSize();
 
-
 	let colorscheme;
 	this.drawStatic = function() {
 		d.setColour(d.menuScheme.text);

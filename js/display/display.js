@@ -9,9 +9,6 @@ const Display = function() {
 	this.clear = () => stdout.write('\x1b[2J');
 	this.init = function() {
 		this.clear();
-		//this.drawBackground('black');
-		//stdout.cursorTo(0,0);
-		//console.log(this.bleh);
 		this.setColour('tab');
 		this.fillScreen();
 		stdout.write('\x1b[?25l');
@@ -23,8 +20,8 @@ const Display = function() {
 		//this.columns = 120;
 
 		cardX = Math.floor((this.columns - (cardWidth + margin) * 7 + margin) / 2);
-		cardY = Math.floor((this.rows - cardHeight) / 2);
-		// cardY = 40;
+		//cardY = Math.floor((this.rows - cardHeight) / 2);
+		cardY = 40;
 
 		// Settings
 		settingsX = Math.floor(this.columns / 2 - 36);
@@ -233,34 +230,6 @@ const Display = function() {
 		this.drawSquare(x, y, cardWidth, cardHeight, true, 'none');
 	}
 
-	/*
-	this.drawGameBoard = function(game) {
-		let stock = game.stock; let waste = game.waste;
-		let piles = game.piles; let foundations = game.foundations;
-
-		for (let p = 0; p < piles.length; p++) {
-			let x = cardX + (cardWidth + margin) * p;
-			for (let c = 0; c < piles[p].length; c++) {
-				let y = cardY + 2 * c;
-				if (piles[p][c].faceUp == false) this.drawCardBack(x, y);
-				else this.drawCard(piles[p][c], x, y);
-			}
-		}
-
-		this.updateDeck(stock, waste);
-		this.updateFoundations(foundations);
-	}
-
-	this.clearGameBoard = function() {
-		this.setBg('green');
-		for (let i = topY - 2; i < this.rows; i++) {
-			stdout.cursorTo(0, i);
-			for (let j = 0; j < this.columns; j++) {
-				stdout.write(' ');
-			}
-		}
-	}*/
-
 	const pauseWidth = 20;
 	const pauseHeight = 7;
 	const pauseX = cardX + (cardWidth + margin) * 3 - 3;
@@ -291,6 +260,7 @@ const Display = function() {
 		}
 	}
 
+	/*
 	this.wasteLength = 0;
 	this.updateDeck = function(stock, waste) {
 		if (stock.length == 0) this.drawFoundationSpot(cardX, topY);
@@ -324,6 +294,7 @@ const Display = function() {
 		}
 	}
 
+	*/
 	this.drawPile = function(pile, index, diff) {
 		let x = cardX + (cardWidth + margin) * index;
 		//stdout.cursorTo(x, cardY - 1);

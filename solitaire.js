@@ -6,8 +6,8 @@ const display = new (require('./js/display/display.js'));
 	display.game = new GameDisplay(display);
 	const SettingsDisplay = require('./js/display/settings_display.js');
 	display.settings = new SettingsDisplay(display);
-const controller = new (require('./js/controller.js'));
-	controller.settings = new (require('./js/controller_settings.js'));
+const controller = new (require('./js/controller/controller.js'));
+	controller.settings = new (require('./js/controller/settings_controller.js'));
 const fs = require('fs');
 
 
@@ -38,15 +38,19 @@ let history = [];
 let lastBuffer;
 
 function updateGame() {
-	let intitalBuffer = controller.buffer;
+	display.game.controller(controller.buffer, true);
+	let initialBuffer = JSON.parse(JSON.stringify(controller.buffer));
 	controller.handleBuffer();
 
 	if (controller.flip && !controller.toMode) {
+		let prevStock = game.stock.length;
 		game.flipDeck(true);
+		if (game.stock.length > 0 && prevStock == 0 || game.stock.length == 0 && prevStock > 0)
+			display.game.stock(game.stock);
 		//history.push(game.getGameData());
 		
 		//display.updateDeck(game.stock, game.waste);
-		display.game.drawWaste(game.waste);
+		display.game.waste(game.waste);
 		let command = { type: 'flip' };
 		history.push(command);
 	}
@@ -101,8 +105,8 @@ function updateGame() {
 				let firstDiff = firstPile.length - action.initialLength[0];
 				let secondDiff = secondePile.length - action.initialLength[1];
 
-				display.drawPile(firstPile, firstIndex, firstDiff);
-				display.drawPile(secondePile, secondIndex, secondDiff);
+				display.game.pile(firstPile, firstIndex, firstDiff);
+				display.game.pile(secondePile, secondIndex, secondDiff);
 				if (!controller.undo) {
 					reverseCommand = [command[1], command[0]];
 					reverseCommand[0].fullDepth += 1;
@@ -135,8 +139,9 @@ function updateGame() {
 					}
 				}
 
-				display.drawPile(pile, pileIndex, diff);
-				display.updateFoundations(game.foundations);
+				display.game.pile(pile, pileIndex, diff);
+				display.game.waste(game.waste);
+				display.game.foundations(game.foundations);
 
 				//display.init();
 				//display.drawGameBoard(game);
@@ -157,8 +162,8 @@ function updateGame() {
 					//display.drawGameBoard(game);
 				}
 
-				display.drawPile(pile, pileIndex, diff);
-				display.updateFoundations(game.foundations);
+				display.game.pile(pile, pileIndex, diff);
+				display.game.foundations(game.foundations);
 
 			} else if (action.type == 'wasteTOpile') {
 				let pileIndex = command[1].index;
@@ -169,13 +174,13 @@ function updateGame() {
 					reverseCommand = [command[1], command[0]];
 				}
 
-				display.drawPile(pile, pileIndex, diff);
-				display.updateDeck(game.stock, game.waste);
+				display.game.pile(pile, pileIndex, diff);
+				display.game.waste(game.waste);
 				controller.buffer.shift();
 
 			} else if (action.type == 'wasteTOfoundation') {
-				display.updateDeck(game.stock, game.waste);
-				display.updateFoundations(game.foundations);
+				display.game.waste(game.waste);
+				display.game.foundations(game.foundations);
 				if (game.waste.length == 0)
 					controller.buffer[0].type = 'pile';
 				controller.buffer.pop();
@@ -193,7 +198,8 @@ function updateGame() {
 			controller.buffer.pop();
 		}
 	}
-	display.drawController(controller);
+	//display.drawController(initialController, controller);
+	display.game.controller(controller.buffer, false);
 }
 
 ///// PAUSE //////
@@ -201,12 +207,13 @@ function updateGame() {
 function updatePause() {
 	controller.handlePause();
 	if (controller.pause == false) {
-		display.clearPauseMenu(game.piles[3]);
-		display.drawController(controller);
+		//display.clearPauseMenu(game.piles[3]);
+		display.game.pause.clear(game.piles[3]);
+		//display.drawController(controller);
 		update = screenUpdates['game'];
 	}
 	else if (controller.submit) {
-		if (controller.pauseOption == 2) {
+		if (controller.pauseOption == 1) {
 			controller.toMode = false;
 			switchTo('menu');
 		}
@@ -219,9 +226,9 @@ function updatePause() {
 
 //Temporary
 let jsonSettings = {
-	theme: 'dark',
+	theme: 'ice',
 	label: false,
-	draw: 3
+	draw: 1
 };
 const allSettings = {
 	theme: ['normal', 'light', 'dark', 'ice'],
@@ -301,9 +308,9 @@ function startScreen(name) {
 	} else if (name == 'game') {
 		game.shuffle().restart();
 		controller.setBuffer();
-		//display.drawGameBoard(game);
 		display.game.drawAll(game.piles);
-		display.drawController(controller);
+		display.game.controller(controller.buffer);
+		//display.game.controller(controller.buffer);
 	} else if (name == 'settings') {
 		display.settings.drawStatic();
 		display.settings.drawDynamic(controller.settings.buffer, controller.settings.code);
