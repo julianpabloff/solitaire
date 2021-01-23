@@ -12,8 +12,8 @@ const GameDisplay = function(d) {
 
 	this.setSize = function() {
 		cardX = Math.floor((d.columns - (cardWidth + margin) * 7 + margin) / 2);
-		//cardY = Math.floor((d.rows - cardHeight) / 2);
-		cardY = 40;
+		cardY = Math.floor((d.rows - cardHeight) / 2);
+		//cardY = 40;
 		topY = cardY - cardHeight - margin;
 		wasteX = findPileX(1);
 		foundationX = [];
@@ -126,33 +126,65 @@ const GameDisplay = function(d) {
 		};
 	}
 
-	this.controller = function(buffer, clear = false) {
+	this.wasteAmount = 0;
+	this.drawController = function(buffer, attribute) { // only pass in a single buffer, not array
 		let cursor = ' '.repeat(cardWidth);
-		d.setColour('cur');
-		d.draw(cursor, findPileX(buffer.index), 0);
-		/*
-		if (clear) d.setColour('tab');
-		else d.setColour('cur');
+		//let cursor = wasteLength + ' '.repeat(cardWidth - 1); // for debugging wasteLength
+		d.setColour(attribute);
 
-		if (buffer.type == 'pile')
+		if (buffer.type == 'pile') {
 			d.draw(cursor, findPileX(buffer.index), cardY - 2);
+		}
 		else if (buffer.type == 'waste') {
-			let wasteX = findPileX(1) + 4 * (wasteLength - 1);
+			let wasteX;
+			wasteX = findPileX(1) + 4 * (wasteLength - 1);
+			//else wasteX = findPileX(1) + 4 * (wasteLength);
 			d.draw(cursor, wasteX, topY - 2);
-			if (wasteLengthChanged && !clear) {
+			if (wasteLengthChanged) {
 				d.setColour('tab');
 				d.draw(' '.repeat(4), wasteX - 4, topY - 2);
 				d.draw(' '.repeat(4), wasteX + cardWidth, topY - 2);
 			}
 		}
-		*/
 	}
 
-	this.blehcontroller = function(buffer, prevBuffer) {
-		//let label = controller.settings.code[1] == 0;
+	this.controller = function(buffer, prevBuffer) {
+		if (buffer.length == 1) {
+			if (prevBuffer.length == 2) // coming out of toMode
+				this.drawController(prevBuffer[1], 'tab');
+			this.drawController(prevBuffer[0], 'tab');
+			this.drawController(buffer[0], 'cur');
+		}
+		else if (buffer.length == 2) {
+			let firstIndex = buffer[0].index;
+			let secondIndex = buffer[1].index;
+			let prevFirstIndex = prevBuffer[0].index;
+			let prevSecondIndex;
+			let firstX = findPileX(firstIndex);
+			let secondX = findPileX(secondIndex);
 
-		//this.drawController(prevBuffer[prevBuffer.length - 1], true);
-		this.drawController(buffer[buffer.length - 1]);
+			if (prevBuffer.length == 1) { // Just getting into toMode
+				this.drawController(buffer[0], 'tom');
+				if (prevFirstIndex != firstIndex)
+					this.drawController(prevBuffer[0], 'tab');
+				if (buffer[0].type == 'waste') {
+					this.drawController(buffer[1], 'cur');
+				}
+			} else { // currently in toMode
+				prevSecondIndex = prevBuffer[1].index;
+				if (buffer[0].type != 'waste' && prevSecondIndex == firstIndex) { // if you're cursor is on the toMode spot and your leaving
+					this.drawController(buffer[1], 'cur');
+				} else if (buffer[0].type != 'waste' && secondIndex == prevFirstIndex) { // if you're cursor is going onto the toMode spot
+					this.drawController(prevBuffer[1], 'tab');
+					this.drawController(buffer[1], 'tom');
+				} else {
+					this.drawController(prevBuffer[1], 'tab');
+					this.drawController(buffer[1], 'cur');
+				}
+
+
+			}
+		}
 	}
 }
 

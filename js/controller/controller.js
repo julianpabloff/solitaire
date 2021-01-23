@@ -13,6 +13,8 @@ const Controller = function() {
 	this.action = {execute: false, command: []};
 	this.toMode = false;
 	// this.pileData and this.gameData from main file
+	
+	this.wasteLength = 0;
 
 	const cycleDown = function(index, length) {
 		if (index == 0) return length - 1;
@@ -100,8 +102,13 @@ const Controller = function() {
 		*/
 
 		if (this.buffer.length == 2) {
-			if (this.toMode && this.submit)
+			if (this.toMode && this.submit) {
+				if (first.index == second.index) {
+					let suitIndex = suits.indexOf(this.gameData.piles[first.index][this.gameData.piles[first.index].length - 1].suit);
+					this.buffer[1] = {type: 'foundation', index: suitIndex, depth: null};
+				}
 				this.toMode = false;
+			}
 
 			if (this.toMode) {
 

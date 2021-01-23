@@ -38,7 +38,7 @@ let history = [];
 let lastBuffer;
 
 function updateGame() {
-	display.game.controller(controller.buffer, true);
+	//display.game.controller(controller.buffer, true);
 	let initialBuffer = JSON.parse(JSON.stringify(controller.buffer));
 	controller.handleBuffer();
 
@@ -48,7 +48,6 @@ function updateGame() {
 		if (game.stock.length > 0 && prevStock == 0 || game.stock.length == 0 && prevStock > 0)
 			display.game.stock(game.stock);
 		//history.push(game.getGameData());
-		
 		//display.updateDeck(game.stock, game.waste);
 		display.game.waste(game.waste);
 		let command = { type: 'flip' };
@@ -198,8 +197,8 @@ function updateGame() {
 			controller.buffer.pop();
 		}
 	}
-	//display.drawController(initialController, controller);
-	display.game.controller(controller.buffer, false);
+	//display.drawController(controller);
+	display.game.controller(controller.buffer, initialBuffer);
 }
 
 ///// PAUSE //////
@@ -210,6 +209,7 @@ function updatePause() {
 		//display.clearPauseMenu(game.piles[3]);
 		display.game.pause.clear(game.piles[3]);
 		//display.drawController(controller);
+		display.game.controller(controller.buffer);
 		update = screenUpdates['game'];
 	}
 	else if (controller.submit) {
@@ -226,7 +226,7 @@ function updatePause() {
 
 //Temporary
 let jsonSettings = {
-	theme: 'ice',
+	theme: 'normal',
 	label: false,
 	draw: 1
 };
@@ -309,8 +309,8 @@ function startScreen(name) {
 		game.shuffle().restart();
 		controller.setBuffer();
 		display.game.drawAll(game.piles);
-		display.game.controller(controller.buffer);
-		//display.game.controller(controller.buffer);
+		//display.drawController(controller);
+		display.game.controller(controller.buffer, controller.buffer);
 	} else if (name == 'settings') {
 		display.settings.drawStatic();
 		display.settings.drawDynamic(controller.settings.buffer, controller.settings.code);
