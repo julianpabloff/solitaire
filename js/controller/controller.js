@@ -103,10 +103,10 @@ const Controller = function() {
 
 		if (this.buffer.length == 2) {
 			if (this.toMode && this.submit) {
-				if (first.index == second.index) {
+				/*if (first.index == second.index && first.type == 'pile' && second.type == 'pile') {
 					let suitIndex = suits.indexOf(this.gameData.piles[first.index][this.gameData.piles[first.index].length - 1].suit);
 					this.buffer[1] = {type: 'foundation', index: suitIndex, depth: null};
-				}
+				}*/
 				this.toMode = false;
 			}
 

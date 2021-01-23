@@ -93,8 +93,18 @@ function updateGame() {
 
 	if (controller.action.execute) {
 		let command = JSON.parse(JSON.stringify(controller.action.command));
+		let firstCommand = command[0];
+		let actionCard;
+		if (firstCommand.type == 'pile') actionCard = game.piles[command[0].index][command[0].fullDepth];
+		else if (firstCommand.type == 'waste') actionCard = game.waste[game.waste.length - 1];
+		if (actionCard.value == 1) {
+			let suits = ['h','c','d','s'];
+			let suitIndex = suits.indexOf(actionCard.suit);
+			command[1] = {type: 'foundation', index: suitIndex, depth: 0};
+		}
 		let action = game.moveCards(command, !controller.undo);
 		let reverseCommand;
+
 
 		if (action.ran) {
 			if (action.type == 'pileTOpile') {
@@ -209,7 +219,7 @@ function updatePause() {
 		//display.clearPauseMenu(game.piles[3]);
 		display.game.pause.clear(game.piles[3]);
 		//display.drawController(controller);
-		display.game.controller(controller.buffer);
+		display.game.controller(controller.buffer, controller.buffer);
 		update = screenUpdates['game'];
 	}
 	else if (controller.submit) {

@@ -20,8 +20,8 @@ const Display = function() {
 		//this.columns = 120;
 
 		cardX = Math.floor((this.columns - (cardWidth + margin) * 7 + margin) / 2);
-		//cardY = Math.floor((this.rows - cardHeight) / 2);
-		cardY = 40;
+		cardY = Math.floor((this.rows - cardHeight) / 2);
+		//cardY = 40;
 
 		// Settings
 		settingsX = Math.floor(this.columns / 2 - 36);
@@ -220,7 +220,8 @@ const Display = function() {
 	}
 
 	this.drawFoundationSpot = function(x, y) {
-		this.setColour('tab');
+		this.setFg('black');
+		this.setBg('green');
 		for (let i = 0; i < 10; i++) {
 			stdout.cursorTo(x, y + i);
 			stdout.write('░░░░░░░░░░░░░░');
@@ -392,7 +393,16 @@ const Display = function() {
 
 ////DEBUG//////////////////////////////////////////////////////////////////////////
 
+	this.drawCardText = function(card, x, y) {
+		if (card.suit == 'h' || card.suit == 'd') this.setFg('red');
+		else this.setFg('white');
+		stdout.cursorTo(x,y);
+		stdout.write(card.value.toString() + card.suit);
+		this.setFg('white');
+	}
 	this.debug = function(game) {
+		this.setBg('black');
+		this.drawSquare(0, 0, this.colums, 25, true, 'none');
 		for (let i = 0; i < 25; i++) {
 			for (let j = 0; j < this.columns; j++) {
 				stdout.cursorTo(j, i);
@@ -418,13 +428,6 @@ const Display = function() {
 			for (let c = 0; c < game.foundations[f].length; c++) {
 				this.drawCardText(game.foundations[f][c], 58 + f * 5, 1 + c);
 			}
-		}
-		this.drawCardText = function(card, x, y) {
-			if (card.suit == 'h' || card.suit == 'd') this.setFg('red');
-			else this.setFg('white');
-			stdout.cursorTo(x,y);
-			stdout.write(card.value.toString() + card.suit);
-			this.setFg('white');
 		}
 
 	}
@@ -456,10 +459,10 @@ const Display = function() {
 			console.log(controller.pileData[i]);
 		}
 		stdout.cursorTo(80, 1); console.log('pause:' + controller.pause);
-		stdout.cursorTo(1, 12); console.log('HISTORY LENGTH: ' + history.length);
+		stdout.cursorTo(1, 14); console.log('HISTORY LENGTH: ' + history.length);
 		if (history.length > 0) {
-			stdout.cursorTo(1,14); console.log('NEXT REVERSE COMMAND:');
-			stdout.cursorTo(3, 15);
+			stdout.cursorTo(1,16); console.log('NEXT REVERSE COMMAND:');
+			stdout.cursorTo(1, 17);
 			let command = history[history.length-1];
 			console.log(command);
 		}

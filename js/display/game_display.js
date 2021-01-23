@@ -137,7 +137,7 @@ const GameDisplay = function(d) {
 		}
 		else if (buffer.type == 'waste') {
 			let wasteX;
-			wasteX = findPileX(1) + 4 * (wasteLength - 1);
+			wasteX = findPileX(1) + 4 * ((wasteLength - 1) * (wasteLength > 0));
 			//else wasteX = findPileX(1) + 4 * (wasteLength);
 			d.draw(cursor, wasteX, topY - 2);
 			if (wasteLengthChanged) {
@@ -172,9 +172,11 @@ const GameDisplay = function(d) {
 				}
 			} else { // currently in toMode
 				prevSecondIndex = prevBuffer[1].index;
-				if (buffer[0].type != 'waste' && prevSecondIndex == firstIndex) { // if you're cursor is on the toMode spot and your leaving
+				// if you're cursor is on the toMode spot and your leaving
+				if (buffer[0].type != 'waste' && prevSecondIndex == firstIndex && prevSecondIndex != secondIndex) {
 					this.drawController(buffer[1], 'cur');
-				} else if (buffer[0].type != 'waste' && secondIndex == prevFirstIndex) { // if you're cursor is going onto the toMode spot
+				// if you're cursor is going onto the toMode spot
+				} else if (buffer[0].type != 'waste' && secondIndex == prevFirstIndex) {
 					this.drawController(prevBuffer[1], 'tab');
 					this.drawController(buffer[1], 'tom');
 				} else {
