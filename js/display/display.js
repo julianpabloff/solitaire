@@ -208,6 +208,23 @@ const Display = function() {
 		this.draw('└' + '─'.repeat(3), x, y + 9);
 	}
 
+	this.drawCardTop = function(card, x, y) {
+		let suit = card.suit;
+		let value = cardVals[card.value];
+
+		if (suit == 'h' || suit == 'd') this.setColour('one');
+		else this.setColour('two');
+
+		this.draw(cardBox[0], x, y);
+		this.draw(cardBox[1], x, y + 1);
+		this.draw(value, x + 2, y + 1);
+	}
+	this.drawCardBackTop = function(x, y) {
+		this.setColour('bac');
+		this.draw(cardBox[0], x, y);
+		this.draw('│· · · · · · │', x, y + 1);
+	}
+
 	this.drawCardBack = function(x, y) {
 		this.setColour('bac');
 		this.drawCardBox(x, y);
@@ -217,6 +234,31 @@ const Display = function() {
 			stdout.cursorTo(x + 1, y+i+1);
 			stdout.write(' · · · · · ·');
 		}
+	}
+
+	this.drawCardMid = function(x, y) {
+		this.setColour('bac');
+		this.draw('│ · · · · · ·│', x, y);
+		this.draw('│· · · · · · │', x, y + 1);
+		
+	}
+	this.movePileDown = function(pile, pileIndex, index, faceUpCount) {
+		let x = findPileX(pileIndex);
+		let y = cardY + (index * 2) + 2;
+		if (index > 0) {
+			this.drawCardMid(x, y - 2);
+		}
+		let faceCount = pile.length - index;
+		this.setColour('cur');
+		this.draw(faceCount.toString(), 0, 0);
+		this.draw(index.toString(), 0, 1);
+		if (faceCount > 1) {
+			for (let i = 0; i < faceCount - 1; i++) {
+				this.drawCardTop(pile[index + i], x, y + i * 2);
+			}
+		}
+		this.drawCard(pile[pile.length - 1], x, y + (faceCount - 1) * 2);
+		//this.drawCardTop(pile[index], x, y);
 	}
 
 	this.drawFoundationSpot = function(x, y) {

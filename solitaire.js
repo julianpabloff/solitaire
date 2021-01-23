@@ -42,6 +42,12 @@ function updateGame() {
 	let initialBuffer = JSON.parse(JSON.stringify(controller.buffer));
 	controller.handleBuffer();
 
+	/*if (controller.down && controller.buffer[0].type == 'pile') {
+		let index = controller.buffer[0].index;
+		let pile = game.piles[index];
+		display.movePileDown(pile, index, controller.buffer[0].fullDepth, game.countFaceUp(pile));
+	}*/
+
 	if (controller.flip && !controller.toMode) {
 		let prevStock = game.stock.length;
 		game.flipDeck(true);
@@ -95,7 +101,7 @@ function updateGame() {
 		let command = JSON.parse(JSON.stringify(controller.action.command));
 		let firstCommand = command[0];
 		let actionCard;
-		if (firstCommand.type == 'pile') actionCard = game.piles[command[0].index][command[0].fullDepth];
+		if (firstCommand.type == 'pile') actionCard = game.piles[firstCommand.index][firstCommand.fullDepth];
 		else if (firstCommand.type == 'waste') actionCard = game.waste[game.waste.length - 1];
 		if (actionCard.value == 1) {
 			let suits = ['h','c','d','s'];
@@ -138,6 +144,7 @@ function updateGame() {
 				if (!controller.undo) {
 					reverseCommand = [command[1], command[0]];
 					controller.buffer.pop();
+					controller.buffer[0].fullDepth--;
 					if (game.piles[pileIndex].length == 0)
 						controller.buffer[0].index = controller.cycleRight(pileIndex, true);
 					if (game.over()) {

@@ -242,15 +242,16 @@ const Game = function() {
 		} else return {ran: false};
 	}
 
+	this.countFaceUp = function(pile) {
+		let count = 0;
+		for (let card of pile)
+			if (card.faceUp) count++;
+		return count;
+	}
 	this.getPileData = function() {
 		let output = [];
-		for (let pile of this.piles) {
-			let count = 0;
-			for (let card of pile) {
-				if (card.faceUp) count++;
-			}
-			output.push(count);
-		}
+		for (let pile of this.piles)
+			output.push(this.countFaceUp(pile));
 		return output;
 	}
 

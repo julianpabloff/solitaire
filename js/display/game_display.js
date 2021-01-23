@@ -37,7 +37,7 @@ const GameDisplay = function(d) {
 			for (let c = 0; c < piles[p].length; c++) {
 				let y = cardY + 2 * c;
 				let card = piles[p][c];
-				if (card.faceUp == false) d.drawCardBack(x, y);
+				if (card.faceUp == false) d.drawCardBackTop(x, y);
 				else d.drawCard(card, x, y);
 			}
 		}
@@ -106,8 +106,12 @@ const GameDisplay = function(d) {
 	this.fullPile = function(pile, index) {
 		let x = findPileX(index);
 		for (let i = 0; i < pile.length; i++) {
-			if (pile[i].faceUp) d.drawCard(pile[i], x, cardY + 2 * i);
-			else d.drawCardBack(x, cardY + 2 * i);
+			let y = cardY + 2 * i;
+			let card = pile[i];
+			//if (pile[i].faceUp) d.drawCard(pile[i], x, cardY + 2 * i);
+			//else d.drawCardBack(x, cardY + 2 * i);
+			if (!card.faceUp) d.drawCardBackTop(x, y);
+			else d.drawCard(card, x, y);
 		}
 	}
 
