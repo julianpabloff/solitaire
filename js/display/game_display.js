@@ -49,7 +49,9 @@ const GameDisplay = function(d) {
 	}
 
 	let wasteLength = 0; // Might be a problem when starting program and playing from a save
+	let prevWasteVisible = 0;
 	let wasteLengthChanged = false;
+	this.wasteVisible;
 	this.waste = function(waste) {
 		let cardSet = [];
 		if (waste.length < wasteLength) {
@@ -141,14 +143,23 @@ const GameDisplay = function(d) {
 		}
 		else if (buffer.type == 'waste') {
 			let wasteX;
-			wasteX = findPileX(1) + 4 * ((wasteLength - 1) * (wasteLength > 0));
+			let wasteAmount = (attribute == 'tab') ? prevWasteVisible : this.wasteVisible;
+			//let wasteAmount = this.wasteVisible;
+			wasteX = findPileX(1) + 4 * ((wasteAmount - 1)); //* (wasteAmount > 0));
 			//else wasteX = findPileX(1) + 4 * (wasteLength);
 			d.draw(cursor, wasteX, topY - 2);
+			/*
+			if (attribute != 'tab' && prevWasteVisible != this.wasteVisible) {
+				d.setColour('tab');
+				let x = wasteX + cardWidth - ((cardWidth + 4) * (this.wasteVisible - prevWasteVisible > 0));
+				d.draw(' '.repeat(4), x, topY - 2);
+			}
 			if (wasteLengthChanged) {
 				d.setColour('tab');
 				d.draw(' '.repeat(4), wasteX - 4, topY - 2);
 				d.draw(' '.repeat(4), wasteX + cardWidth, topY - 2);
-			}
+			}*/
+			prevWasteVisible = this.wasteVisible;
 		}
 	}
 

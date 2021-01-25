@@ -7,6 +7,7 @@ const Game = function() {
 	this.stock = [];
 	this.drawAmount = 1;
 	this.waste = [];
+	this.wasteVisible = 0;
 	this.foundations = [];
 
 	this.buildDeck = function() {
@@ -41,6 +42,7 @@ const Game = function() {
 		this.piles = [];
 		this.stock = [];
 		this.waste = [];
+		this.wasteVisible = 0;
 		this.foundations = [];
 		this.dealCards();
 		return this;
@@ -74,15 +76,18 @@ const Game = function() {
 				this.waste.push(this.stock.pop());
 				i++;
 			}
+			this.wasteVisible = this.wasteVisible + (this.waste.length <= 3);
+
 			if (this.stock.length == 0) {
 				if (deckStartOver) {
 					let wasteLength = this.waste.length;
 					for (let i = 0; i < wasteLength; i++) {
 						this.stock.push(this.waste.pop());
 					}
+					this.wasteVisible = 0;
 				} else deckStartOver = true;
 			}
-		} else {
+		} else { // I have yet to implement this.wasteVisible because undoing isn't a thing yet
 			let amount = this.waste.length - Math.floor((this.waste.length - 1) / this.drawAmount) * this.drawAmount;
 			let i = 0;
 			while (this.waste.length > 0 && i < amount) {
@@ -184,6 +189,7 @@ const Game = function() {
 		let target = pile[pile.length - 1];
 		if (this.validPair(card, target)) {
 			this.piles[second.index].push(this.waste.pop());
+			this.wasteVisible = this.wasteVisible - (this.waste.length < 3)
 			return {
 				initialLength: initialLength,
 				ran: true,

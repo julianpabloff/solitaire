@@ -42,15 +42,18 @@ function updateGame() {
 	let initialBuffer = JSON.parse(JSON.stringify(controller.buffer));
 	controller.handleBuffer();
 
-	/*if (controller.down && controller.buffer[0].type == 'pile') {
+	/*
+	if (controller.down && controller.buffer[0].type == 'pile') {
 		let index = controller.buffer[0].index;
 		let pile = game.piles[index];
 		display.movePileDown(pile, index, controller.buffer[0].fullDepth, game.countFaceUp(pile));
-	}*/
+	}
+	*/
 
 	if (controller.flip && !controller.toMode) {
 		let prevStock = game.stock.length;
 		game.flipDeck(true);
+		display.game.wasteVisible = game.wasteVisible;
 		if (game.stock.length > 0 && prevStock == 0 || game.stock.length == 0 && prevStock > 0)
 			display.game.stock(game.stock);
 		//history.push(game.getGameData());
@@ -82,8 +85,11 @@ function updateGame() {
 	}*/
 
 	// Pop the cursor back down when the waste is empty
-	if (game.waste.length == 0)
+	if (game.waste.length == 0) {
 		controller.buffer[0].type = 'pile';
+		game.wasteVisible = 0;
+		display.game.wasteVisible = 0;
+	}
 
 	//// MOVEMENT TYPES ////
 	// pile to pile CHECK
@@ -192,6 +198,7 @@ function updateGame() {
 
 				display.game.pile(pile, pileIndex, diff);
 				display.game.waste(game.waste);
+				display.game.wasteVisible = game.wasteVisible;
 				controller.buffer.shift();
 
 			} else if (action.type == 'wasteTOfoundation') {
