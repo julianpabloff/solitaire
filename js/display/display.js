@@ -17,11 +17,11 @@ const Display = function() {
 	this.setSize = function() {
 		this.rows = stdout.rows;
 		this.columns = stdout.columns;
-		//this.columns = 120;
+		// this.columns = 120;
 
 		cardX = Math.floor((this.columns - (cardWidth + margin) * 7 + margin) / 2);
 		cardY = Math.floor((this.rows - cardHeight) / 2);
-		//cardY = 40;
+		// cardY = 40;
 
 		// Settings
 		settingsX = Math.floor(this.columns / 2 - 36);
@@ -209,20 +209,21 @@ const Display = function() {
 	}
 
 	this.drawCardTop = function(card, x, y) {
-		let suit = card.suit;
-		let value = cardVals[card.value];
+		if (card.faceUp) {
+			let suit = card.suit;
+			let value = cardVals[card.value];
 
-		if (suit == 'h' || suit == 'd') this.setColour('one');
-		else this.setColour('two');
+			if (suit == 'h' || suit == 'd') this.setColour('one');
+			else this.setColour('two');
 
-		this.draw(cardBox[0], x, y);
-		this.draw(cardBox[1], x, y + 1);
-		this.draw(value, x + 2, y + 1);
-	}
-	this.drawCardBackTop = function(x, y) {
-		this.setColour('bac');
-		this.draw(cardBox[0], x, y);
-		this.draw('│· · · · · · │', x, y + 1);
+			this.draw(cardBox[0], x, y);
+			this.draw(cardBox[1], x, y + 1);
+			this.draw(value, x + 2, y + 1);
+		} else {
+			this.setColour('bac');
+			this.draw(cardBox[0], x, y);
+			this.draw('│· · · · · · │', x, y + 1);
+		}
 	}
 
 	this.drawCardBack = function(x, y) {
@@ -241,24 +242,6 @@ const Display = function() {
 		this.draw('│ · · · · · ·│', x, y);
 		this.draw('│· · · · · · │', x, y + 1);
 		
-	}
-	this.movePileDown = function(pile, pileIndex, index, faceUpCount) {
-		let x = findPileX(pileIndex);
-		let y = cardY + (index * 2) + 2;
-		if (index > 0) {
-			this.drawCardMid(x, y - 2);
-		}
-		let faceCount = pile.length - index;
-		this.setColour('cur');
-		this.draw(faceCount.toString(), 0, 0);
-		this.draw(index.toString(), 0, 1);
-		if (faceCount > 1) {
-			for (let i = 0; i < faceCount - 1; i++) {
-				this.drawCardTop(pile[index + i], x, y + i * 2);
-			}
-		}
-		this.drawCard(pile[pile.length - 1], x, y + (faceCount - 1) * 2);
-		//this.drawCardTop(pile[index], x, y);
 	}
 
 	this.drawFoundationSpot = function(x, y) {
@@ -480,7 +463,7 @@ const Display = function() {
 		if (cardAction.valid) stdout.write(colors.fg.green + 'VALID');
 		else stdout.write(colors.fg.red + 'INVALID');
 	}
-	this.debugController = function(game, controller, history) {
+	this.debugController = function(game, controller, debugActionType, history) {
 		stdout.write(colors.reset);
 		for (let i = 0; i < 23; i++) {
 			for (let j = 0; j < this.columns; j++) {
@@ -488,9 +471,10 @@ const Display = function() {
 				stdout.write(' ');
 			}
 		}
-		stdout.cursorTo(1,1); console.log('BUFFER:');
+		stdout.cursorTo(1,1); console.log('BUFFER:' + controller.buffer.length);
 		stdout.cursorTo(1,2); console.log(controller.buffer);
 		stdout.cursorTo(1,6); console.log('ACTION:');
+		stdout.cursorTo(9,6); console.log(debugActionType);
 		stdout.cursorTo(1,7); console.log(controller.action);
 		stdout.cursorTo(10, 1); console.log('(TO MODE: ' + controller.toMode + ')');
 		stdout.cursorTo(30, 1); console.log('lastIndex: ' + controller.lastIndex);
@@ -500,7 +484,9 @@ const Display = function() {
 			stdout.cursorTo(60 + (i * 2), 2);
 			console.log(controller.pileData[i]);
 		}
-		stdout.cursorTo(80, 1); console.log('pause:' + controller.pause);
+		stdout.cursorTo(60, 4); console.log('wasteVisible:');
+		stdout.cursorTo(60, 5); console.log('game: ' + game.wasteVisible + ' display.game: ' + this.game.wasteVisible);
+		stdout.cursorTo(80, 1); console.log('before TO MODE: ', controller.bufferBeforeToMode);
 		stdout.cursorTo(1, 14); console.log('HISTORY LENGTH: ' + history.length);
 		if (history.length > 0) {
 			stdout.cursorTo(1,16); console.log('NEXT REVERSE COMMAND:');

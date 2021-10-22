@@ -36,6 +36,7 @@ function updateMenu() {
 
 let history = [];
 let lastBuffer;
+let debugActionType = '';
 
 function updateGame() {
 	//display.game.controller(controller.buffer, true);
@@ -46,8 +47,10 @@ function updateGame() {
 	if (controller.down && controller.buffer[0].type == 'pile') {
 		let index = controller.buffer[0].index;
 		let pile = game.piles[index];
-		display.movePileDown(pile, index, controller.buffer[0].fullDepth, game.countFaceUp(pile));
+		display.game.highlightPile(pile, index, controller.buffer[0].fullDepth, game.countFaceUp(pile));
 	}
+	 * For moving the cards down to get a look at
+	 * them and for card selection depth to be displayed
 	*/
 
 	if (controller.flip && !controller.toMode) {
@@ -119,6 +122,7 @@ function updateGame() {
 
 
 		if (action.ran) {
+			debugActionType = action.type;
 			if (action.type == 'pileTOpile') {
 				let firstIndex = command[0].index; let secondIndex = command[1].index;
 				let firstPile = game.piles[firstIndex]; let secondePile = game.piles[secondIndex];
@@ -204,9 +208,13 @@ function updateGame() {
 			} else if (action.type == 'wasteTOfoundation') {
 				display.game.waste(game.waste);
 				display.game.foundations(game.foundations);
-				if (game.waste.length == 0)
+				if (game.waste.length == 0 || (controller.bufferBeforeToMode.type == 'pile' && controller.buffer[1].type == 'pile')) {
 					controller.buffer[0].type = 'pile';
+					//controller.buffer[0].index = controller.buffer[1].index; Disabled to stop cursor going down to empty spot. Revisit this if bugs occur.
+				}
 				controller.buffer.pop();
+				let wasteVis = game.wasteVisible;
+				display.game.wasteVisible = game.wasteVisible = wasteVis - (game.waste.length < 3);
 				if (game.over()) {
 					display.clearGameBoard();
 					update = updateEnd;
@@ -218,6 +226,12 @@ function updateGame() {
 			if (action.type == 'wasteTOpile') {
 				controller.buffer[0].index = controller.buffer[1].index;
 			}
+			/*
+			if (action.type == 'wasteTOfoundation') {// && controller.bufferBeforeToMode.type == 'pile' && controller.buffer[1].type == 'pile') {
+				controller.buffer[0].type = 'pile';
+				controller.buffer[0].index = controller.buffer[1].index;
+			}
+			*/
 			controller.buffer.pop();
 		}
 	}
@@ -321,7 +335,7 @@ function switchTo(name) {
 
 function clearScreen(name) {
 	if (name == 'menu') display.menu.clear();
-	else if (name == 'game') display.game.clear(game.piles);//display.init(); //display.clearGameBoard();
+	else if (name == 'game') display.game.clear(game.piles, controller.buffer);//display.init(); //display.clearGameBoard();
 	else if (name == 'settings') display.settings.clear();
 }
 
@@ -346,8 +360,8 @@ applySettings(jsonSettings);
 game.buildDeck();
 display.init();
 startScreen('menu');
-//display.debug(game);
-//display.debugController(game, controller, history);
+// display.debug(game);
+// display.debugController(game, controller, debugActionType, history);
 
 let keypress = require("keypress");
 keypress(process.stdin);
@@ -366,8 +380,8 @@ process.stdin.on("keypress", function(ch, k) {
 	controller.gameData = game.getGameData();
 	controller.update(key.name);
 	update();
-	//display.debug(game);
-	//display.debugController(game, controller, history);
+	// display.debug(game);
+	// display.debugController(game, controller, debugActionType, history);
 });
 
 let rows = process.stdout.rows;

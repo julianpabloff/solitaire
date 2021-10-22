@@ -19,6 +19,7 @@ const Game = function() {
 		return this;
 	}
 
+	/*
 	this.shuffle = function() {
 		for (let i in cards) {
 			randomIndex = Math.floor(Math.random() * cards.length);
@@ -26,6 +27,13 @@ const Game = function() {
 			cards[i] = cards[randomIndex];
 			cards[randomIndex] = temp;
 		}
+		return this;
+	}
+	*/
+	this.shuffle = function() {
+		let temp = cards[49];
+		cards[49] = cards[0];
+		cards[0] = temp;
 		return this;
 	}
 
